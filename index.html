@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#1e1b4b" />
+  <meta name="description" content="Official Elite Arrows merchandise - apparel, accessories & more" />
+  <title>Elite Arrows Merch - Official Store</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="page-wrapper">
+    <!-- Header -->
+    <header class="header">
+      <a href="/" class="header-logo">ELITE ARROWS MERCH</a>
+      <nav class="header-nav">
+        <a href="/" class="active">Home</a>
+        <a href="products.html">Products</a>
+        <a href="cart.html" class="cart-icon">
+          Cart
+          <span class="cart-badge" id="cartBadge">0</span>
+        </a>
+      </nav>
+      <button class="mobile-menu-btn" id="menuBtn" aria-label="Menu">☰</button>
+    </header>
+
+    <!-- Mobile Navigation -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+    <nav class="mobile-nav" id="mobileNav">
+      <div class="header-logo">ELITE ARROWS MERCH</div>
+      <a href="/" class="active">Home</a>
+      <a href="products.html">Products</a>
+      <a href="cart.html">Cart</a>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Hero -->
+      <section class="hero animate-fade-in">
+        <h1>Official Elite Arrows<br><span>Merch Store</span></h1>
+        <p>Rep your league in style. Premium darts-inspired apparel and accessories for players who mean business.</p>
+        <div class="hero-actions">
+          <a href="products.html" class="btn btn-primary">Shop Now</a>
+          <a href="products.html" class="btn btn-secondary">Browse Collection</a>
+        </div>
+      </section>
+
+      <!-- Featured Products -->
+      <section class="animate-slide-up">
+        <h2 class="section-title">Featured <span>Gear</span></h2>
+        <div class="product-grid" id="featuredGrid"></div>
+      </section>
+
+      <!-- Features -->
+      <section class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🚀</div>
+          <h3>Fast Shipping</h3>
+          <p>Free delivery on all orders over $50. Get your gear delivered straight to your oche.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">💎</div>
+          <h3>Premium Quality</h3>
+          <p>Premium materials built to withstand the heat of competition. As tough as your finish.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔄</div>
+          <h3>Easy Returns</h3>
+          <p>Not happy with your throw? Return within 30 days for a full refund. No questions asked.</p>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <h4>Shop</h4>
+          <a href="products.html">All Gear</a>
+          <a href="products.html">New Drops</a>
+          <a href="products.html">Best Sellers</a>
+        </div>
+        <div class="footer-col">
+          <h4>Support</h4>
+          <a href="#">FAQ</a>
+          <a href="#">Shipping</a>
+          <a href="#">Returns</a>
+        </div>
+        <div class="footer-col">
+          <h4>Company</h4>
+          <a href="#">About Us</a>
+          <a href="#">Contact</a>
+          <a href="#">Careers</a>
+        </div>
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Service</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        &copy; 2026 Elite Arrows Merch. All rights reserved.
+      </div>
+    </footer>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>

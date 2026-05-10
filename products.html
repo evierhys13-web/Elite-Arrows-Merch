@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#1e1b4b" />
+  <meta name="description" content="Browse the full Elite Arrows merch collection" />
+  <title>Products - Elite Arrows Merch</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="page-wrapper">
+    <!-- Header -->
+    <header class="header">
+      <a href="/" class="header-logo">ELITE ARROWS MERCH</a>
+      <nav class="header-nav">
+        <a href="/">Home</a>
+        <a href="products.html" class="active">Products</a>
+        <a href="cart.html" class="cart-icon">
+          Cart
+          <span class="cart-badge" id="cartBadge">0</span>
+        </a>
+      </nav>
+      <button class="mobile-menu-btn" id="menuBtn" aria-label="Menu">☰</button>
+    </header>
+
+    <!-- Mobile Navigation -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+    <nav class="mobile-nav" id="mobileNav">
+      <div class="header-logo">ELITE ARROWS MERCH</div>
+      <a href="/">Home</a>
+      <a href="products.html" class="active">Products</a>
+      <a href="cart.html">Cart</a>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="products-header">
+        <h2 class="section-title" style="margin-bottom: 0;">All <span>Gear</span></h2>
+        <div class="filter-group">
+          <button class="filter-btn active" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="t-shirts">T-Shirts</button>
+          <button class="filter-btn" data-filter="hoodies">Hoodies</button>
+          <button class="filter-btn" data-filter="accessories">Accessories</button>
+        </div>
+      </div>
+
+      <div class="product-grid" id="productsGrid"></div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <h4>Shop</h4>
+          <a href="products.html">All Gear</a>
+          <a href="products.html">New Drops</a>
+          <a href="products.html">Best Sellers</a>
+        </div>
+        <div class="footer-col">
+          <h4>Support</h4>
+          <a href="#">FAQ</a>
+          <a href="#">Shipping</a>
+          <a href="#">Returns</a>
+        </div>
+        <div class="footer-col">
+          <h4>Company</h4>
+          <a href="#">About Us</a>
+          <a href="#">Contact</a>
+          <a href="#">Careers</a>
+        </div>
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Service</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        &copy; 2026 Elite Arrows Merch. All rights reserved.
+      </div>
+    </footer>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#1e1b4b" />
+  <title>Admin - Elite Arrows Merch</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .admin-container {
+      max-width: 1000px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    .admin-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--border-radius-lg);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+    }
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    th {
+      color: var(--accent-cyan);
+      text-transform: uppercase;
+      font-size: 0.8rem;
+    }
+    .stock-input {
+      width: 60px;
+      padding: 6px;
+      background: #ffffff11;
+      border: 1px solid var(--border);
+      color: white;
+      border-radius: 4px;
+    }
+    .order-item {
+      padding: 15px;
+      border-bottom: 1px solid var(--border);
+    }
+    .order-item:last-child {
+      border-bottom: none;
+    }
+    .detail-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-wrapper">
+    <header class="header">
+      <a href="/" class="header-logo">ELITE ARROWS ADMIN</a>
+      <nav class="header-nav">
+        <a href="/">Exit Admin</a>
+      </nav>
+    </header>
+
+    <main class="admin-container">
+      <h2 class="section-title">Store <span>Management</span></h2>
+
+      <!-- Stock Management -->
+      <div class="admin-card">
+        <h3 class="card-title">Inventory Control</h3>
+        <div id="stockTable"></div>
+        <button class="btn btn-primary" onclick="saveStock()" style="margin-top: 20px;">Save Stock Levels</button>
+      </div>
+
+      <!-- Orders List -->
+      <div class="admin-card">
+        <h3 class="card-title">Recent Orders</h3>
+        <div id="ordersList">
+          <p style="color: var(--text-muted);">No orders found.</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    function showToast(message, type) {
+      const toast = document.getElementById('toast');
+      toast.className = 'toast ' + (type || '');
+      toast.innerHTML = `<span class="toast-icon">✓</span> ${message}`;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    function loadAdmin() {
+      const products = JSON.parse(localStorage.getItem('eliteArrowsProducts') || '[]');
+      const stockContainer = document.getElementById('stockTable');
+
+      if (products.length === 0) {
+        stockContainer.innerHTML = '<p>No products found.</p>';
+      } else {
+        let html = '<table><thead><tr><th>Product</th><th>Medium</th><th>Large</th><th>XL</th></tr></thead><tbody>';
+        products.forEach(p => {
+          html += `<tr>
+            <td>${p.name}</td>
+            <td><input type="number" class="stock-input" data-id="${p.id}" data-size="Medium" value="${p.stock.Medium}"></td>
+            <td><input type="number" class="stock-input" data-id="${p.id}" data-size="Large" value="${p.stock.Large}"></td>
+            <td><input type="number" class="stock-input" data-id="${p.id}" data-size="XL" value="${p.stock.XL}"></td>
+          </tr>`;
+        });
+        html += '</tbody></table>';
+        stockContainer.innerHTML = html;
+      }
+
+      const orders = JSON.parse(localStorage.getItem('eliteArrowsOrders') || '[]');
+      const ordersContainer = document.getElementById('ordersList');
+      if (orders.length > 0) {
+        ordersContainer.innerHTML = orders.reverse().map(order => `
+          <div class="order-item">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+              <strong>${order.orderNumber}</strong>
+              <span style="color: var(--accent-cyan);">${order.date}</span>
+            </div>
+            <div><span class="detail-label">CUSTOMER:</span> ${order.customer.name}</div>
+            <div><span class="detail-label">ADDRESS:</span> ${order.customer.address}</div>
+            <div style="margin-top: 10px;">
+              <span class="detail-label">ITEMS:</span>
+              ${order.items.map(item => `
+                <div style="font-size: 0.9rem; margin-left: 20px; border-left: 2px solid var(--border); padding-left: 10px; margin-top: 5px;">
+                  ${item.qty}x Elite Arrows Jersey (${item.size})<br>
+                  <span style="color: var(--text-muted); font-size: 0.8rem;">
+                    Name: ${item.customName} | Logo 1: ${item.sponsor1} | Logo 2: ${item.sponsor2}
+                  </span>
+                </div>
+              `).join('')}
+            </div>
+            <div style="text-align: right; font-weight: 800; color: var(--success); margin-top: 10px;">
+              TOTAL: ${order.total}
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    function saveStock() {
+      const products = JSON.parse(localStorage.getItem('eliteArrowsProducts') || '[]');
+      const inputs = document.querySelectorAll('.stock-input');
+
+      inputs.forEach(input => {
+        const id = parseInt(input.dataset.id);
+        const size = input.dataset.size;
+        const val = parseInt(input.value);
+        const p = products.find(prod => prod.id === id);
+        if (p) {
+          p.stock[size] = val;
+        }
+      });
+
+      localStorage.setItem('eliteArrowsProducts', JSON.stringify(products));
+      showToast('Stock levels updated successfully!', 'success');
+    }
+
+    document.addEventListener('DOMContentLoaded', loadAdmin);
+  </script>
+</body>
+</html>

@@ -1,7 +1,33 @@
-const products = [
-  { id: 1, name: 'Elite Arrows Jersey', category: 'jerseys', price: 20.00, color: '#1e1b4b', image: 'Copilot_20260511_133032.png' },
+// Initial Products Data with Stock
+const initialProducts = [
+  {
+    id: 1,
+    name: 'Elite Arrows Jersey',
+    category: 'jerseys',
+    price: 20.00,
+    color: '#1e1b4b',
+    image: 'Copilot_20260511_133032.png',
+    stock: {
+      'Medium': 10,
+      'Large': 5,
+      'XL': 0
+    }
+  },
 ];
 
+// Initialize Data in LocalStorage if not exists
+function initData() {
+  if (!localStorage.getItem('eliteArrowsProducts')) {
+    localStorage.setItem('eliteArrowsProducts', JSON.stringify(initialProducts));
+  }
+  if (!localStorage.getItem('eliteArrowsOrders')) {
+    localStorage.setItem('eliteArrowsOrders', JSON.stringify([]));
+  }
+}
+
+initData();
+
+const products = JSON.parse(localStorage.getItem('eliteArrowsProducts'));
 const featuredIds = [1];
 
 function getCart() {
@@ -26,33 +52,60 @@ function updateBadge() {
   }
 }
 
+// Add to cart with a unique key based on id, size, and customization
 function addToCart(productId) {
   let cart = getCart();
-  const existing = cart.find(item => item.id === productId);
+  const product = products.find(p => p.id === productId);
+
+  // Default to first available size or Medium
+  const defaultSize = Object.keys(product.stock).find(s => product.stock[s] > 0) || 'Medium';
+
+  const cartKey = `${productId}-${defaultSize}`;
+  const existing = cart.find(item => item.cartKey === cartKey);
+
   if (existing) {
     existing.qty += 1;
   } else {
-    cart.push({ id: productId, qty: 1 });
+    cart.push({
+      cartKey,
+      id: productId,
+      qty: 1,
+      size: defaultSize,
+      customName: '',
+      sponsor1: '',
+      sponsor2: ''
+    });
   }
   saveCart(cart);
-  const product = products.find(p => p.id === productId);
   showToast(`${product.name} added to cart!`, 'success');
+  if (window.location.pathname.includes('cart.html')) renderCart();
 }
 
-function removeFromCart(productId) {
-  let cart = getCart().filter(item => item.id !== productId);
+function removeFromCart(cartKey) {
+  let cart = getCart().filter(item => item.cartKey !== cartKey);
   saveCart(cart);
   renderCart();
 }
 
-function updateQty(productId, delta) {
+function updateCartItem(cartKey, field, value) {
   let cart = getCart();
-  const item = cart.find(i => i.id === productId);
+  const item = cart.find(i => i.cartKey === cartKey);
+  if (item) {
+    item[field] = value;
+    // If size changes, update cartKey to keep unique
+    if (field === 'size') {
+      item.cartKey = `${item.id}-${value}`;
+    }
+  }
+  saveCart(cart);
+  renderCart();
+}
+
+function updateQty(cartKey, delta) {
+  let cart = getCart();
+  const item = cart.find(i => i.cartKey === cartKey);
   if (item) {
     item.qty = Math.max(1, item.qty + delta);
-    if (item.qty === 0) {
-      cart = cart.filter(i => i.id !== productId);
-    }
   }
   saveCart(cart);
   renderCart();
@@ -74,7 +127,7 @@ function createProductCard(product) {
   div.dataset.category = product.category;
   const imageHtml = product.image
     ? `<img src="${product.image}" alt="${product.name}" style="width: 100%; height: 100%; object-fit: cover;">`
-    : product.emoji;
+    : '👕';
   div.innerHTML = `
     <div class="product-image" style="background: linear-gradient(135deg, ${product.color} 0%, #1e1b4b 100%); font-size: 3rem; display: flex; align-items: center; justify-content: center; overflow: hidden;">
       ${imageHtml}
@@ -117,20 +170,50 @@ function renderCart() {
     const subtotal = (product.price * item.qty).toFixed(2);
     const imageHtml = product.image
       ? `<img src="${product.image}" alt="${product.name}" style="width: 100%; height: 100%; object-fit: cover;">`
-      : product.emoji;
+      : '👕';
+
+    const sizes = Object.keys(product.stock);
+    const sizeOptions = sizes.map(s => {
+      const isStocked = product.stock[s] > 0;
+      return `<option value="${s}" ${item.size === s ? 'selected' : ''} ${!isStocked ? 'disabled' : ''}>${s} ${isStocked ? '' : '(Out of Stock)'}</option>`;
+    }).join('');
+
     return `
-      <div class="cart-item animate-fade-in">
-        <div class="cart-item-image" style="background: linear-gradient(135deg, ${product.color} 0%, #1e1b4b 100%); font-size: 2rem; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-          ${imageHtml}
+      <div class="cart-item animate-fade-in" style="flex-direction: column; align-items: stretch; gap: 15px;">
+        <div style="display: flex; gap: 20px;">
+          <div class="cart-item-image" style="background: linear-gradient(135deg, ${product.color} 0%, #1e1b4b 100%); font-size: 2rem; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+            ${imageHtml}
+          </div>
+          <div class="cart-item-info">
+            <div class="cart-item-name">${product.name}</div>
+            <div class="cart-item-price">£${subtotal}</div>
+            <div class="cart-item-actions">
+              <button class="qty-btn" onclick="updateQty('${item.cartKey}', -1)">−</button>
+              <span class="qty-value">${item.qty}</span>
+              <button class="qty-btn" onclick="updateQty('${item.cartKey}', 1)">+</button>
+              <button class="remove-btn" onclick="removeFromCart('${item.cartKey}')">Remove</button>
+            </div>
+          </div>
         </div>
-        <div class="cart-item-info">
-          <div class="cart-item-name">${product.name}</div>
-          <div class="cart-item-price">£${subtotal}</div>
-          <div class="cart-item-actions">
-            <button class="qty-btn" onclick="updateQty(${product.id}, -1)">−</button>
-            <span class="qty-value">${item.qty}</span>
-            <button class="qty-btn" onclick="updateQty(${product.id}, 1)">+</button>
-            <button class="remove-btn" onclick="removeFromCart(${product.id})">Remove</button>
+
+        <div class="customization-fields glass" style="padding: 15px; border-radius: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="field-group">
+            <label style="display: block; font-size: 0.75rem; margin-bottom: 5px; color: var(--accent-cyan);">SIZE</label>
+            <select class="form-input" onchange="updateCartItem('${item.cartKey}', 'size', this.value)" style="width: 100%; padding: 8px; border-radius: 8px; background: #ffffff11; border: 1px solid var(--border); color: white;">
+              ${sizeOptions}
+            </select>
+          </div>
+          <div class="field-group">
+            <label style="display: block; font-size: 0.75rem; margin-bottom: 5px; color: var(--accent-cyan);">YOUR NAME (ON BACK)</label>
+            <input type="text" value="${item.customName}" placeholder="Enter name" onchange="updateCartItem('${item.cartKey}', 'customName', this.value)" style="width: 100%; padding: 8px; border-radius: 8px; background: #ffffff11; border: 1px solid var(--border); color: white;">
+          </div>
+          <div class="field-group">
+            <label style="display: block; font-size: 0.75rem; margin-bottom: 5px; color: var(--accent-cyan);">SPONSOR LOGO 1</label>
+            <input type="text" value="${item.sponsor1}" placeholder="Logo 1 text" onchange="updateCartItem('${item.cartKey}', 'sponsor1', this.value)" style="width: 100%; padding: 8px; border-radius: 8px; background: #ffffff11; border: 1px solid var(--border); color: white;">
+          </div>
+          <div class="field-group">
+            <label style="display: block; font-size: 0.75rem; margin-bottom: 5px; color: var(--accent-cyan);">SPONSOR LOGO 2</label>
+            <input type="text" value="${item.sponsor2}" placeholder="Logo 2 text" onchange="updateCartItem('${item.cartKey}', 'sponsor2', this.value)" style="width: 100%; padding: 8px; border-radius: 8px; background: #ffffff11; border: 1px solid var(--border); color: white;">
           </div>
         </div>
       </div>
@@ -153,6 +236,55 @@ function renderCart() {
   document.getElementById('total').textContent = fmt(total);
 
   updateBadge();
+}
+
+function processCheckout() {
+  const name = document.getElementById('custName').value;
+  const address = document.getElementById('custAddress').value;
+  const cart = getCart();
+
+  if (!name || !address) {
+    showToast('Please fill in your name and address', 'error');
+    return;
+  }
+
+  // Check if all items have required fields
+  const incomplete = cart.some(item => !item.customName || !item.sponsor1 || !item.sponsor2);
+  if (incomplete) {
+    showToast('Please complete all customization fields', 'error');
+    return;
+  }
+
+  const orderNumber = 'EA-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+  const newOrder = {
+    orderNumber,
+    customer: { name, address },
+    items: cart,
+    total: document.getElementById('total').textContent,
+    date: new Date().toLocaleString()
+  };
+
+  const orders = JSON.parse(localStorage.getItem('eliteArrowsOrders') || '[]');
+  orders.push(newOrder);
+  localStorage.setItem('eliteArrowsOrders', JSON.stringify(orders));
+
+  // Update stock levels
+  const currentProducts = JSON.parse(localStorage.getItem('eliteArrowsProducts'));
+  cart.forEach(item => {
+    const p = currentProducts.find(prod => prod.id === item.id);
+    if (p && p.stock[item.size] !== undefined) {
+      p.stock[item.size] = Math.max(0, p.stock[item.size] - item.qty);
+    }
+  });
+  localStorage.setItem('eliteArrowsProducts', JSON.stringify(currentProducts));
+
+  saveCart([]);
+  showToast(`Order ${orderNumber} placed successfully!`, 'success');
+
+  setTimeout(() => {
+    alert(`Thank you for your order!\nOrder Number: ${orderNumber}`);
+    window.location.href = '/';
+  }, 1000);
 }
 
 function renderProducts(gridId, productList) {

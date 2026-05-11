@@ -1,19 +1,8 @@
 const products = [
-  { id: 1, name: 'Elite Arrows Logo Tee', category: 't-shirts', price: 29.99, color: '#312e81', emoji: '👕' },
-  { id: 2, name: 'Bullseye Vintage Tee', category: 't-shirts', price: 34.99, color: '#1e1b4b', emoji: '👕' },
-  { id: 3, name: '180 Club Hoodie', category: 'hoodies', price: 69.99, color: '#4c1d95', emoji: '🧥' },
-  { id: 4, name: 'Checkout Pullover', category: 'hoodies', price: 74.99, color: '#1e3a5f', emoji: '🧥' },
-  { id: 5, name: 'Elite Snapback Cap', category: 'accessories', price: 24.99, color: '#065f46', emoji: '🧢' },
-  { id: 6, name: 'Double Top Beanie', category: 'accessories', price: 19.99, color: '#7c3aed', emoji: '🧢' },
-  { id: 7, name: 'Darts Graphic Tee', category: 't-shirts', price: 32.99, color: '#831843', emoji: '👕' },
-  { id: 8, name: 'Premier League Hoodie', category: 'hoodies', price: 64.99, color: '#1e40af', emoji: '🧥' },
-  { id: 9, name: 'Flight Club Tote', category: 'accessories', price: 22.99, color: '#374151', emoji: '👜' },
-  { id: 10, name: 'Oche Long Sleeve', category: 't-shirts', price: 39.99, color: '#14532d', emoji: '👕' },
-  { id: 11, name: 'Treble Zip Hoodie', category: 'hoodies', price: 79.99, color: '#6b21a8', emoji: '🧥' },
-  { id: 12, name: 'Elite Water Bottle', category: 'accessories', price: 18.99, color: '#0d9488', emoji: '🍶' },
+  { id: 1, name: 'Elite Arrows Jersey', category: 'jerseys', price: 20.00, color: '#1e1b4b', image: 'Copilot_20260511_133032.png' },
 ];
 
-const featuredIds = [1, 3, 5, 8];
+const featuredIds = [1];
 
 function getCart() {
   try {
@@ -83,14 +72,17 @@ function createProductCard(product) {
   const div = document.createElement('div');
   div.className = 'product-card animate-fade-in';
   div.dataset.category = product.category;
+  const imageHtml = product.image
+    ? `<img src="${product.image}" alt="${product.name}" style="width: 100%; height: 100%; object-fit: cover;">`
+    : product.emoji;
   div.innerHTML = `
-    <div class="product-image" style="background: linear-gradient(135deg, ${product.color} 0%, #1e1b4b 100%); font-size: 3rem;">
-      ${product.emoji}
+    <div class="product-image" style="background: linear-gradient(135deg, ${product.color} 0%, #1e1b4b 100%); font-size: 3rem; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+      ${imageHtml}
     </div>
     <div class="product-body">
       <div class="product-category">${product.category}</div>
       <div class="product-name">${product.name}</div>
-      <div class="product-price">$${product.price.toFixed(2)}</div>
+      <div class="product-price">£${product.price.toFixed(2)}</div>
       <div class="product-footer">
         <button class="btn btn-primary btn-sm" onclick="addToCart(${product.id})">
           Add to Cart
@@ -123,14 +115,17 @@ function renderCart() {
     const product = products.find(p => p.id === item.id);
     if (!product) return '';
     const subtotal = (product.price * item.qty).toFixed(2);
+    const imageHtml = product.image
+      ? `<img src="${product.image}" alt="${product.name}" style="width: 100%; height: 100%; object-fit: cover;">`
+      : product.emoji;
     return `
       <div class="cart-item animate-fade-in">
-        <div class="cart-item-image" style="background: linear-gradient(135deg, ${product.color} 0%, #1e1b4b 100%); font-size: 2rem;">
-          ${product.emoji}
+        <div class="cart-item-image" style="background: linear-gradient(135deg, ${product.color} 0%, #1e1b4b 100%); font-size: 2rem; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+          ${imageHtml}
         </div>
         <div class="cart-item-info">
           <div class="cart-item-name">${product.name}</div>
-          <div class="cart-item-price">$${subtotal}</div>
+          <div class="cart-item-price">£${subtotal}</div>
           <div class="cart-item-actions">
             <button class="qty-btn" onclick="updateQty(${product.id}, -1)">−</button>
             <span class="qty-value">${item.qty}</span>
@@ -151,7 +146,7 @@ function renderCart() {
   const tax = subtotal * 0.08;
   const total = subtotal + shipping + tax;
 
-  const fmt = n => '$' + n.toFixed(2);
+  const fmt = n => '£' + n.toFixed(2);
   document.getElementById('subtotal').textContent = fmt(subtotal);
   document.getElementById('shipping').textContent = shipping === 0 ? 'FREE' : fmt(shipping);
   document.getElementById('tax').textContent = fmt(tax);

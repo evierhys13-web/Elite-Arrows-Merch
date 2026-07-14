@@ -1,114 +1,17 @@
-// Initial Products Data with Stock
-const initialProducts = [
-  {
-    id: 1,
-    name: 'Elite Arrows Jersey',
-    category: 'jerseys',
-    price: 20.00,
-    color: '#1e1b4b',
-    image: 'Copilot_20260511_133032.png',
-    stock: {
-      'Medium': 10,
-      'Large': 5,
-      'XL': 0
-    }
-  },
-];
-
-// Initialize Data in LocalStorage if not exists
-function initData() {
-  if (!localStorage.getItem('eliteArrowsProducts')) {
-    localStorage.setItem('eliteArrowsProducts', JSON.stringify(initialProducts));
-  }
-  if (!localStorage.getItem('eliteArrowsOrders')) {
-    localStorage.setItem('eliteArrowsOrders', JSON.stringify([]));
-  }
-}
-
-initData();
-
-const products = JSON.parse(localStorage.getItem('eliteArrowsProducts'));
-const featuredIds = [1];
-
-function getCart() {
+function getApplications() {
   try {
-    return JSON.parse(localStorage.getItem('eliteArrowsCart')) || [];
+    return JSON.parse(localStorage.getItem('eliteArrowsApplications')) || [];
   } catch {
     return [];
   }
 }
 
-function saveCart(cart) {
-  localStorage.setItem('eliteArrowsCart', JSON.stringify(cart));
-  updateBadge();
+function saveApplications(apps) {
+  localStorage.setItem('eliteArrowsApplications', JSON.stringify(apps));
 }
 
-function updateBadge() {
-  const badge = document.getElementById('cartBadge');
-  if (badge) {
-    const cart = getCart();
-    const count = cart.reduce((sum, item) => sum + item.qty, 0);
-    badge.textContent = count;
-  }
-}
-
-// Add to cart with a unique key based on id, size, and customization
-function addToCart(productId) {
-  let cart = getCart();
-  const product = products.find(p => p.id === productId);
-
-  // Default to first available size or Medium
-  const defaultSize = Object.keys(product.stock).find(s => product.stock[s] > 0) || 'Medium';
-
-  const cartKey = `${productId}-${defaultSize}`;
-  const existing = cart.find(item => item.cartKey === cartKey);
-
-  if (existing) {
-    existing.qty += 1;
-  } else {
-    cart.push({
-      cartKey,
-      id: productId,
-      qty: 1,
-      size: defaultSize,
-      customName: '',
-      sponsor1: '',
-      sponsor2: ''
-    });
-  }
-  saveCart(cart);
-  showToast(`${product.name} added to cart!`, 'success');
-  if (window.location.pathname.includes('cart.html')) renderCart();
-}
-
-function removeFromCart(cartKey) {
-  let cart = getCart().filter(item => item.cartKey !== cartKey);
-  saveCart(cart);
-  renderCart();
-}
-
-function updateCartItem(cartKey, field, value) {
-  let cart = getCart();
-  const item = cart.find(i => i.cartKey === cartKey);
-  if (item) {
-    item[field] = value;
-    // If size changes, update cartKey to keep unique
-    if (field === 'size') {
-      item.cartKey = `${item.id}-${value}`;
-    }
-  }
-  saveCart(cart);
-  renderCart();
-}
-
-function updateQty(cartKey, delta) {
-  let cart = getCart();
-  const item = cart.find(i => i.cartKey === cartKey);
-  if (item) {
-    item.qty = Math.max(1, item.qty + delta);
-  }
-  saveCart(cart);
-  renderCart();
+function getApplicationCount() {
+  return getApplications().length;
 }
 
 function showToast(message, type) {
@@ -118,198 +21,7 @@ function showToast(message, type) {
   toast.innerHTML = `<span class="toast-icon">${type === 'success' ? '✓' : 'ℹ'}</span> ${message}`;
   toast.classList.add('show');
   clearTimeout(toast._timeout);
-  toast._timeout = setTimeout(() => toast.classList.remove('show'), 2500);
-}
-
-function createProductCard(product) {
-  const div = document.createElement('div');
-  div.className = 'product-card animate-fade-in';
-  div.dataset.category = product.category;
-  const imageHtml = product.image
-    ? `<img src="${product.image}" alt="${product.name}" style="width: 100%; height: 100%; object-fit: cover;">`
-    : '👕';
-  div.innerHTML = `
-    <div class="product-image" style="background: linear-gradient(135deg, ${product.color} 0%, #1e1b4b 100%); font-size: 3rem; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-      ${imageHtml}
-    </div>
-    <div class="product-body">
-      <div class="product-category">${product.category}</div>
-      <div class="product-name">${product.name}</div>
-      <div class="product-price">£${product.price.toFixed(2)}</div>
-      <div class="product-footer">
-        <button class="btn btn-primary btn-sm" onclick="addToCart(${product.id})">
-          Add to Cart
-        </button>
-      </div>
-    </div>
-  `;
-  return div;
-}
-
-function renderCart() {
-  const cart = getCart();
-  const emptyEl = document.getElementById('emptyCart');
-  const listEl = document.getElementById('cartItemsList');
-  const summaryEl = document.getElementById('orderSummary');
-
-  if (cart.length === 0) {
-    if (emptyEl) emptyEl.style.display = 'block';
-    if (listEl) listEl.style.display = 'none';
-    if (summaryEl) summaryEl.style.display = 'none';
-    updateBadge();
-    return;
-  }
-
-  if (emptyEl) emptyEl.style.display = 'none';
-  if (listEl) listEl.style.display = 'block';
-  if (summaryEl) summaryEl.style.display = 'block';
-
-  listEl.innerHTML = cart.map(item => {
-    const product = products.find(p => p.id === item.id);
-    if (!product) return '';
-    const subtotal = (product.price * item.qty).toFixed(2);
-    const imageHtml = product.image
-      ? `<img src="${product.image}" alt="${product.name}" style="width: 100%; height: 100%; object-fit: cover;">`
-      : '👕';
-
-    const sizes = Object.keys(product.stock);
-    const sizeOptions = sizes.map(s => {
-      const isStocked = product.stock[s] > 0;
-      return `<option value="${s}" ${item.size === s ? 'selected' : ''} ${!isStocked ? 'disabled' : ''}>${s} ${isStocked ? '' : '(Out of Stock)'}</option>`;
-    }).join('');
-
-    return `
-      <div class="cart-item animate-fade-in" style="flex-direction: column; align-items: stretch; gap: 15px;">
-        <div style="display: flex; gap: 20px;">
-          <div class="cart-item-image" style="background: linear-gradient(135deg, ${product.color} 0%, #1e1b4b 100%); font-size: 2rem; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-            ${imageHtml}
-          </div>
-          <div class="cart-item-info">
-            <div class="cart-item-name">${product.name}</div>
-            <div class="cart-item-price">£${subtotal}</div>
-            <div class="cart-item-actions">
-              <button class="qty-btn" onclick="updateQty('${item.cartKey}', -1)">−</button>
-              <span class="qty-value">${item.qty}</span>
-              <button class="qty-btn" onclick="updateQty('${item.cartKey}', 1)">+</button>
-              <button class="remove-btn" onclick="removeFromCart('${item.cartKey}')">Remove</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="customization-fields glass" style="padding: 15px; border-radius: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-          <div class="field-group">
-            <label style="display: block; font-size: 0.75rem; margin-bottom: 5px; color: var(--accent-cyan);">SIZE</label>
-            <select class="form-input" onchange="updateCartItem('${item.cartKey}', 'size', this.value)" style="width: 100%; padding: 8px; border-radius: 8px; background: #ffffff11; border: 1px solid var(--border); color: white;">
-              ${sizeOptions}
-            </select>
-          </div>
-          <div class="field-group">
-            <label style="display: block; font-size: 0.75rem; margin-bottom: 5px; color: var(--accent-cyan);">YOUR NAME (ON BACK)</label>
-            <input type="text" value="${item.customName}" placeholder="Enter name" onchange="updateCartItem('${item.cartKey}', 'customName', this.value)" style="width: 100%; padding: 8px; border-radius: 8px; background: #ffffff11; border: 1px solid var(--border); color: white;">
-          </div>
-          <div class="field-group">
-            <label style="display: block; font-size: 0.75rem; margin-bottom: 5px; color: var(--accent-cyan);">SPONSOR LOGO 1</label>
-            <input type="text" value="${item.sponsor1}" placeholder="Logo 1 text" onchange="updateCartItem('${item.cartKey}', 'sponsor1', this.value)" style="width: 100%; padding: 8px; border-radius: 8px; background: #ffffff11; border: 1px solid var(--border); color: white;">
-          </div>
-          <div class="field-group">
-            <label style="display: block; font-size: 0.75rem; margin-bottom: 5px; color: var(--accent-cyan);">SPONSOR LOGO 2</label>
-            <input type="text" value="${item.sponsor2}" placeholder="Logo 2 text" onchange="updateCartItem('${item.cartKey}', 'sponsor2', this.value)" style="width: 100%; padding: 8px; border-radius: 8px; background: #ffffff11; border: 1px solid var(--border); color: white;">
-          </div>
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  const subtotal = cart.reduce((sum, item) => {
-    const p = products.find(prod => prod.id === item.id);
-    return sum + (p ? p.price * item.qty : 0);
-  }, 0);
-
-  const shipping = subtotal >= 50 ? 0 : 5.99;
-  const tax = subtotal * 0.08;
-  const total = subtotal + shipping + tax;
-
-  const fmt = n => '£' + n.toFixed(2);
-  document.getElementById('subtotal').textContent = fmt(subtotal);
-  document.getElementById('shipping').textContent = shipping === 0 ? 'FREE' : fmt(shipping);
-  document.getElementById('tax').textContent = fmt(tax);
-  document.getElementById('total').textContent = fmt(total);
-
-  updateBadge();
-}
-
-function processCheckout() {
-  const name = document.getElementById('custName').value;
-  const address = document.getElementById('custAddress').value;
-  const cart = getCart();
-
-  if (!name || !address) {
-    showToast('Please fill in your name and address', 'error');
-    return;
-  }
-
-  // Check if all items have required fields
-  const incomplete = cart.some(item => !item.customName || !item.sponsor1 || !item.sponsor2);
-  if (incomplete) {
-    showToast('Please complete all customization fields', 'error');
-    return;
-  }
-
-  const orderNumber = 'EA-' + Math.random().toString(36).substr(2, 9).toUpperCase();
-  const newOrder = {
-    orderNumber,
-    customer: { name, address },
-    items: cart,
-    total: document.getElementById('total').textContent,
-    date: new Date().toLocaleString()
-  };
-
-  const orders = JSON.parse(localStorage.getItem('eliteArrowsOrders') || '[]');
-  orders.push(newOrder);
-  localStorage.setItem('eliteArrowsOrders', JSON.stringify(orders));
-
-  // Update stock levels
-  const currentProducts = JSON.parse(localStorage.getItem('eliteArrowsProducts'));
-  cart.forEach(item => {
-    const p = currentProducts.find(prod => prod.id === item.id);
-    if (p && p.stock[item.size] !== undefined) {
-      p.stock[item.size] = Math.max(0, p.stock[item.size] - item.qty);
-    }
-  });
-  localStorage.setItem('eliteArrowsProducts', JSON.stringify(currentProducts));
-
-  saveCart([]);
-  showToast(`Order ${orderNumber} placed successfully!`, 'success');
-
-  setTimeout(() => {
-    alert(`Thank you for your order!\nOrder Number: ${orderNumber}`);
-    window.location.href = '/';
-  }, 1000);
-}
-
-function renderProducts(gridId, productList) {
-  const grid = document.getElementById(gridId);
-  if (!grid) return;
-  grid.innerHTML = '';
-  productList.forEach(product => {
-    grid.appendChild(createProductCard(product));
-  });
-}
-
-function setupFilters() {
-  const filterBtns = document.querySelectorAll('.filter-btn');
-  if (!filterBtns.length) return;
-  filterBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      filterBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      const filter = btn.dataset.filter;
-      const filtered = filter === 'all'
-        ? products
-        : products.filter(p => p.category === filter);
-      renderProducts('productsGrid', filtered);
-    });
-  });
+  toast._timeout = setTimeout(() => toast.classList.remove('show'), 3000);
 }
 
 function setupMobileMenu() {
@@ -333,21 +45,111 @@ function setupMobileMenu() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  updateBadge();
   setupMobileMenu();
 
-  const featuredGrid = document.getElementById('featuredGrid');
-  if (featuredGrid) {
-    const featured = products.filter(p => featuredIds.includes(p.id));
-    renderProducts('featuredGrid', featured);
+  const form = document.getElementById('applicationForm');
+  if (form) {
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const fullName = document.getElementById('fullName').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const age = parseInt(document.getElementById('age').value);
+      const location = document.getElementById('location').value.trim();
+      const experience = document.getElementById('experience').value;
+      const avgScore = parseFloat(document.getElementById('avgScore').value) || 0;
+      const whyJoin = document.getElementById('whyJoin').value.trim();
+      const availability = document.getElementById('availability').value;
+      const referral = document.getElementById('referral').value.trim();
+
+      const application = {
+        id: 'EA-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substr(2, 4).toUpperCase(),
+        fullName,
+        email,
+        age,
+        location,
+        experience,
+        avgScore,
+        whyJoin,
+        availability,
+        referral,
+        status: 'pending',
+        submittedAt: new Date().toISOString(),
+      };
+
+      const apps = getApplications();
+      apps.push(application);
+      saveApplications(apps);
+
+      showToast('Application submitted successfully! We\'ll be in touch.', 'success');
+      form.reset();
+
+      setTimeout(() => {
+        window.location.href = 'applications.html';
+      }, 1200);
+    });
   }
 
-  if (document.getElementById('productsGrid')) {
-    renderProducts('productsGrid', products);
-    setupFilters();
+  // Applications page
+  const appsContainer = document.getElementById('applicationsContainer');
+  if (appsContainer) {
+    renderApplications(appsContainer);
   }
 
-  if (document.getElementById('cartItems')) {
-    renderCart();
+  const pendingCount = document.getElementById('pendingCount');
+  if (pendingCount) {
+    const apps = getApplications();
+    const pending = apps.filter(a => a.status === 'pending').length;
+    pendingCount.textContent = pending;
   }
 });
+
+function renderApplications(container) {
+  const apps = getApplications();
+
+  if (apps.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📋</div>
+        <h3>No applications yet</h3>
+        <p>Submit your application on the home page to get started.</p>
+        <a href="/" class="btn btn-primary">Apply Now</a>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = apps.reverse().map(app => {
+    const statusClass = app.status === 'approved' ? 'status-approved' : app.status === 'rejected' ? 'status-rejected' : 'status-pending';
+    const statusLabel = app.status.charAt(0).toUpperCase() + app.status.slice(1);
+
+    return `
+      <div class="app-card">
+        <div class="app-card-header">
+          <div>
+            <div class="app-name">${escapeHtml(app.fullName)}</div>
+            <div class="app-id">${app.id}</div>
+          </div>
+          <span class="app-status ${statusClass}">${statusLabel}</span>
+        </div>
+        <div class="app-card-body">
+          <div class="app-detail"><span class="detail-label">Email:</span> ${escapeHtml(app.email)}</div>
+          <div class="app-detail"><span class="detail-label">Age:</span> ${app.age}</div>
+          <div class="app-detail"><span class="detail-label">Location:</span> ${escapeHtml(app.location)}</div>
+          <div class="app-detail"><span class="detail-label">Experience:</span> ${escapeHtml(app.experience)}</div>
+          <div class="app-detail"><span class="detail-label">Avg Score:</span> ${app.avgScore || 'N/A'}</div>
+          <div class="app-detail"><span class="detail-label">Availability:</span> ${escapeHtml(app.availability)}</div>
+          <div class="app-detail"><span class="detail-label">Referral:</span> ${escapeHtml(app.referral) || 'N/A'}</div>
+          <div class="app-detail app-why-join"><span class="detail-label">Why Join:</span> ${escapeHtml(app.whyJoin)}</div>
+          <div class="app-detail"><span class="detail-label">Submitted:</span> ${new Date(app.submittedAt).toLocaleString()}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}

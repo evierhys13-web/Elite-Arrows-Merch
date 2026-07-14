@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#1e1b4b" />
-  <meta name="description" content="Official Elite Arrows merchandise - apparel, accessories & more" />
-  <title>Elite Arrows Merch - Official Store</title>
+  <meta name="description" content="Join the Elite Arrows League - Submit your application to compete" />
+  <title>Elite Arrows League - Applications</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -15,14 +15,10 @@
   <div class="page-wrapper">
     <!-- Header -->
     <header class="header">
-      <a href="/" class="header-logo">ELITE ARROWS MERCH</a>
+      <a href="/" class="header-logo">ELITE ARROWS LEAGUE</a>
       <nav class="header-nav">
         <a href="/" class="active">Home</a>
-        <a href="products.html">Products</a>
-        <a href="cart.html" class="cart-icon">
-          Cart
-          <span class="cart-badge" id="cartBadge">0</span>
-        </a>
+        <a href="applications.html">Applications</a>
       </nav>
       <button class="mobile-menu-btn" id="menuBtn" aria-label="Menu">☰</button>
     </header>
@@ -30,46 +26,106 @@
     <!-- Mobile Navigation -->
     <div class="mobile-overlay" id="mobileOverlay"></div>
     <nav class="mobile-nav" id="mobileNav">
-      <div class="header-logo">ELITE ARROWS MERCH</div>
+      <div class="header-logo">ELITE ARROWS LEAGUE</div>
       <a href="/" class="active">Home</a>
-      <a href="products.html">Products</a>
-      <a href="cart.html">Cart</a>
+      <a href="applications.html">Applications</a>
     </nav>
 
     <!-- Main Content -->
     <main class="main-content">
       <!-- Hero -->
       <section class="hero animate-fade-in">
-        <h1>Official Elite Arrows<br><span>Merch Store</span></h1>
-        <p>Rep your league in style. Premium darts-inspired apparel and accessories for players who mean business.</p>
-        <div class="hero-actions">
-          <a href="products.html" class="btn btn-primary">Shop Now</a>
-          <a href="products.html" class="btn btn-secondary">Browse Collection</a>
-        </div>
+        <h1>Join the Elite Arrows<br><span>League</span></h1>
+        <p>Think you have what it takes? Complete the application below to earn your spot among the best players in the league.</p>
       </section>
 
-      <!-- Featured Products -->
-      <section class="animate-slide-up">
-        <h2 class="section-title">Featured <span>Gear</span></h2>
-        <div class="product-grid" id="featuredGrid"></div>
+      <!-- Application Form -->
+      <section class="application-section animate-slide-up">
+        <div class="application-card card">
+          <div class="card-title">
+            <span class="card-icon">🏹</span>
+            Player Application
+          </div>
+          <form id="applicationForm" class="application-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="fullName">Full Name</label>
+                <input type="text" id="fullName" class="form-input" placeholder="e.g. John Smith" required>
+              </div>
+              <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" class="form-input" placeholder="e.g. john@example.com" required>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="age">Age</label>
+                <input type="number" id="age" class="form-input" placeholder="e.g. 25" min="16" max="99" required>
+              </div>
+              <div class="form-group">
+                <label for="location">City / Location</label>
+                <input type="text" id="location" class="form-input" placeholder="e.g. London, UK" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="experience">Darts Experience</label>
+              <select id="experience" class="form-input" required>
+                <option value="">Select your experience level...</option>
+                <option value="beginner">Beginner - Just starting out</option>
+                <option value="intermediate">Intermediate - Play casually with friends</option>
+                <option value="advanced">Advanced - League or tournament experience</option>
+                <option value="professional">Professional - Competed at a high level</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="avgScore">Average Score (3-dart)</label>
+              <input type="number" id="avgScore" class="form-input" placeholder="e.g. 60" min="0" max="180" step="0.1">
+            </div>
+            <div class="form-group">
+              <label for="whyJoin">Why do you want to join Elite Arrows?</label>
+              <textarea id="whyJoin" class="form-input form-textarea" placeholder="Tell us about yourself, your goals, and why you'd be a great addition to the league..." required></textarea>
+            </div>
+            <div class="form-group">
+              <label for="availability">Availability</label>
+              <select id="availability" class="form-input" required>
+                <option value="">Select availability...</option>
+                <option value="weekdays">Weekdays (Mon-Fri)</option>
+                <option value="weekends">Weekends</option>
+                <option value="evenings">Evenings (after 6pm)</option>
+                <option value="flexible">Flexible - Available anytime</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="referral">How did you hear about us?</label>
+              <input type="text" id="referral" class="form-input" placeholder="e.g. Social media, friend, local pub...">
+            </div>
+            <div class="form-group checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" id="agreeTerms" required>
+                <span>I agree to the Elite Arrows League rules and code of conduct</span>
+              </label>
+            </div>
+            <button type="submit" class="btn btn-cyan btn-submit">Submit Application</button>
+          </form>
+        </div>
       </section>
 
       <!-- Features -->
       <section class="features-grid">
         <div class="feature-card">
-          <div class="feature-icon">🚀</div>
-          <h3>Fast Shipping</h3>
-          <p>Free delivery on all orders over £50. Get your gear delivered straight to your oche.</p>
+          <div class="feature-icon">🏆</div>
+          <h3>Competitive Play</h3>
+          <p>Compete in a structured league format with players at your skill level. Climb the rankings and prove yourself.</p>
         </div>
         <div class="feature-card">
-          <div class="feature-icon">💎</div>
-          <h3>Premium Quality</h3>
-          <p>Premium materials built to withstand the heat of competition. As tough as your finish.</p>
+          <div class="feature-icon">🎯</div>
+          <h3>Professional Setup</h3>
+          <p>Play on professional-grade boards with proper lighting and scoring. Every match feels like the big stage.</p>
         </div>
         <div class="feature-card">
-          <div class="feature-icon">🔄</div>
-          <h3>Easy Returns</h3>
-          <p>Not happy with your throw? Return within 30 days for a full refund. No questions asked.</p>
+          <div class="feature-icon">🤝</div>
+          <h3>Community</h3>
+          <p>Join a welcoming community of darts enthusiasts. Make friends, share tips, and grow together.</p>
         </div>
       </section>
     </main>
@@ -78,31 +134,32 @@
     <footer class="footer">
       <div class="footer-grid">
         <div class="footer-col">
-          <h4>Shop</h4>
-          <a href="products.html">All Gear</a>
-          <a href="products.html">New Drops</a>
-          <a href="products.html">Best Sellers</a>
+          <h4>League</h4>
+          <a href="#">Standings</a>
+          <a href="#">Rules</a>
+          <a href="#">Schedule</a>
         </div>
         <div class="footer-col">
           <h4>Support</h4>
           <a href="#">FAQ</a>
-          <a href="#">Shipping</a>
-          <a href="#">Returns</a>
+          <a href="#">Contact Us</a>
+          <a href="#">Report Issue</a>
         </div>
         <div class="footer-col">
           <h4>Company</h4>
           <a href="#">About Us</a>
-          <a href="#">Contact</a>
-          <a href="#">Careers</a>
+          <a href="#">Sponsors</a>
+          <a href="#">Press</a>
         </div>
         <div class="footer-col">
           <h4>Legal</h4>
           <a href="#">Privacy Policy</a>
           <a href="#">Terms of Service</a>
+          <a href="#">Code of Conduct</a>
         </div>
       </div>
       <div class="footer-bottom">
-        &copy; 2026 Elite Arrows Merch. All rights reserved.
+        &copy; 2026 Elite Arrows League. All rights reserved.
       </div>
     </footer>
   </div>

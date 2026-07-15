@@ -109,7 +109,6 @@ document.addEventListener('DOMContentLoaded', () => {
         position: document.getElementById('rolePosition').value,
         experience: document.getElementById('roleExperience').value.trim(),
         availability: document.getElementById('roleAvailability').value,
-        portfolio: document.getElementById('rolePortfolio').value.trim(),
         type: 'role',
         status: 'pending',
         submittedAt: new Date().toISOString(),
@@ -135,6 +134,40 @@ document.addEventListener('DOMContentLoaded', () => {
   const roleContainer = document.getElementById('roleApplicationsContainer');
   if (roleContainer) {
     renderRoleApplications(roleContainer);
+  }
+
+  // Suggestions
+  const sugForm = document.getElementById('suggestionForm');
+  if (sugForm) {
+    sugForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const suggestion = {
+        id: 'EA-SUG-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substr(2, 4).toUpperCase(),
+        submittedBy: document.getElementById('sugName').value.trim(),
+        email: document.getElementById('sugEmail').value.trim(),
+        title: document.getElementById('sugTitle').value.trim(),
+        description: document.getElementById('sugDescription').value.trim(),
+        category: document.getElementById('sugCategory').value,
+        votes: 0,
+        voters: [],
+        status: 'new',
+        submittedAt: new Date().toISOString(),
+      };
+
+      const suggestions = getSuggestions();
+      suggestions.push(suggestion);
+      saveSuggestions(suggestions);
+
+      showToast('Suggestion submitted successfully!', 'success');
+      sugForm.reset();
+      renderSuggestions(document.getElementById('suggestionsContainer'));
+    });
+  }
+
+  const sugContainer = document.getElementById('suggestionsContainer');
+  if (sugContainer) {
+    renderSuggestions(sugContainer);
   }
 });
 
@@ -201,6 +234,10 @@ function renderRoleApplications(container) {
     streamer: 'Streamer / Content Creator',
     moderator: 'Moderator / Admin',
     social: 'Social Media Manager',
+    sponsorship: 'Sponsorship Coordinator',
+    tournament: 'Tournament Organiser',
+    event: 'Event Coordinator',
+    recruiter: 'Recruiter',
     other: 'Other',
   };
 
@@ -221,13 +258,116 @@ function renderRoleApplications(container) {
           <div class="app-detail"><span class="detail-label">Email:</span> ${escapeHtml(app.email)}</div>
           <div class="app-detail"><span class="detail-label">Position:</span> ${escapeHtml(positionLabels[app.position] || app.position)}</div>
           <div class="app-detail"><span class="detail-label">Availability:</span> ${escapeHtml(app.availability)}</div>
-          ${app.portfolio ? `<div class="app-detail"><span class="detail-label">Portfolio:</span> <a href="${escapeHtml(app.portfolio)}" target="_blank" style="color: var(--accent-primary);">${escapeHtml(app.portfolio)}</a></div>` : ''}
           <div class="app-detail app-why-join"><span class="detail-label">Experience:</span> ${escapeHtml(app.experience)}</div>
           <div class="app-detail"><span class="detail-label">Submitted:</span> ${new Date(app.submittedAt).toLocaleString()}</div>
         </div>
       </div>
     `;
   }).join('');
+}
+
+// ---- Suggestions ----
+function getSuggestions() {
+  try {
+    return JSON.parse(localStorage.getItem('eliteArrowsSuggestions')) || [];
+  } catch {
+    return [];
+  }
+}
+
+function saveSuggestions(suggestions) {
+  localStorage.setItem('eliteArrowsSuggestions', JSON.stringify(suggestions));
+}
+
+function renderSuggestions(container) {
+  const suggestions = getSuggestions();
+
+  if (suggestions.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">💡</div>
+        <h3>No suggestions yet</h3>
+        <p>Submit your idea above to get started.</p>
+      </div>
+    `;
+    return;
+  }
+
+  const categoryLabels = {
+    league: 'League Format & Rules',
+    tournament: 'Tournaments & Events',
+    community: 'Community & Communication',
+    platform: 'Website & Platform',
+    other: 'Other',
+  };
+
+  const statusLabels = {
+    new: 'New',
+    considering: 'Being Considered',
+    approved: 'Under Approval',
+    planned: 'Planned',
+    completed: 'Completed',
+    declined: 'Declined',
+  };
+
+  const statusClasses = {
+    new: 'status-pending',
+    considering: 'status-approved',
+    approved: 'status-approved',
+    planned: 'status-approved',
+    completed: 'status-approved',
+    declined: 'status-rejected',
+  };
+
+  const voterId = localStorage.getItem('sugVoterId') || 'voter-' + Math.random().toString(36).substr(2, 8);
+  localStorage.setItem('sugVoterId', voterId);
+
+  container.innerHTML = suggestions.reverse().map(s => {
+    const statusClass = statusClasses[s.status] || 'status-pending';
+    const statusLabel = statusLabels[s.status] || 'New';
+    const hasVoted = s.voters && s.voters.includes(voterId);
+
+    return `
+      <div class="app-card">
+        <div class="app-card-header">
+          <div>
+            <div class="app-name">${escapeHtml(s.title)}</div>
+            <div class="app-id">${s.id} &middot; by ${escapeHtml(s.submittedBy)}</div>
+          </div>
+          <span class="app-status ${statusClass}">${statusLabel}</span>
+        </div>
+        <div class="app-card-body">
+          <div class="app-detail"><span class="detail-label">Category:</span> ${escapeHtml(categoryLabels[s.category] || s.category)}</div>
+          <div class="app-detail"><span class="detail-label">Submitted:</span> ${new Date(s.submittedAt).toLocaleString()}</div>
+          <div class="app-detail app-why-join">${escapeHtml(s.description)}</div>
+          <div style="display: flex; align-items: center; gap: 12px; margin-top: 16px;">
+            <button class="btn btn-sm ${hasVoted ? 'btn-secondary' : 'btn-primary'}" onclick="voteSuggestion('${s.id}')" ${hasVoted ? 'disabled' : ''}>
+              ${hasVoted ? '✓ Voted' : '▲ Vote'}
+            </button>
+            <span style="color: var(--text-secondary); font-size: 0.9rem; font-weight: 600;">${s.votes || 0} vote${s.votes !== 1 ? 's' : ''}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function voteSuggestion(id) {
+  const suggestions = getSuggestions();
+  const s = suggestions.find(x => x.id === id);
+  if (!s) return;
+
+  const voterId = localStorage.getItem('sugVoterId');
+  if (!voterId || (s.voters && s.voters.includes(voterId))) return;
+
+  s.votes = (s.votes || 0) + 1;
+  s.voters = s.voters || [];
+  s.voters.push(voterId);
+  saveSuggestions(suggestions);
+
+  const container = document.getElementById('suggestionsContainer');
+  if (container) renderSuggestions(container);
+  showToast('Vote recorded!', 'success');
 }
 
 function escapeHtml(str) {

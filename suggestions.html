@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#1e1b4b" />
+  <meta name="description" content="Suggest ideas and improvements for the Elite Arrows League" />
+  <title>Suggestions - Elite Arrows League</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="page-wrapper">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">ELITE ARROWS</div>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="/" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Home
+        </a>
+        <a href="applications.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          Player Applications
+        </a>
+        <a href="roles.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Job / Role Applications
+        </a>
+        <a href="suggestions.html" class="nav-item active">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+          Suggestions
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Mobile Header -->
+    <div class="mobile-header">
+      <div class="sidebar-logo">ELITE ARROWS</div>
+      <button class="mobile-menu-btn" id="menuBtn" aria-label="Menu">☰</button>
+    </div>
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+    <nav class="mobile-nav" id="mobileNav">
+      <div class="sidebar-logo" style="padding: 24px; border-bottom: 1px solid var(--border); margin-bottom: 12px;">ELITE ARROWS</div>
+      <a href="/" class="nav-item">Home</a>
+      <a href="applications.html" class="nav-item">Player Applications</a>
+      <a href="roles.html" class="nav-item">Job / Role Applications</a>
+      <a href="suggestions.html" class="nav-item active">Suggestions</a>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 32px;">
+        <h2 class="section-title" style="margin-bottom: 0;">Suggestions <span>& Ideas</span></h2>
+      </div>
+
+      <!-- Suggestion Form -->
+      <section class="application-section animate-slide-up" style="margin: 0 auto 40px;">
+        <div class="card">
+          <div class="card-title">
+            <span style="font-size: 1.5rem;">💡</span>
+            Submit a Suggestion
+          </div>
+          <form id="suggestionForm" class="application-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="sugName">Your Name</label>
+                <input type="text" id="sugName" class="form-input" placeholder="e.g. John Smith" required>
+              </div>
+              <div class="form-group">
+                <label for="sugEmail">Email Address</label>
+                <input type="email" id="sugEmail" class="form-input" placeholder="e.g. john@example.com" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="sugTitle">Suggestion Title</label>
+              <input type="text" id="sugTitle" class="form-input" placeholder="e.g. Add a weekly newsletter" required>
+            </div>
+            <div class="form-group">
+              <label for="sugDescription">Describe your suggestion</label>
+              <textarea id="sugDescription" class="form-input form-textarea" placeholder="Tell us about your idea, how it would work, and why it would improve the league..." required></textarea>
+            </div>
+            <div class="form-group">
+              <label for="sugCategory">Category</label>
+              <select id="sugCategory" class="form-input" required>
+                <option value="">Select a category...</option>
+                <option value="league">League Format & Rules</option>
+                <option value="tournament">Tournaments & Events</option>
+                <option value="community">Community & Communication</option>
+                <option value="platform">Website & Platform</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="form-group checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" id="sugAgree" required>
+                <span>I confirm this suggestion is appropriate and follows the community guidelines</span>
+              </label>
+            </div>
+            <button type="submit" class="btn btn-primary btn-submit">Submit Suggestion</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- Suggestions List -->
+      <h2 class="section-title">Community <span>Suggestions</span></h2>
+      <p style="color: var(--text-secondary); margin-bottom: 24px; font-size: 0.9rem;">Vote on suggestions you'd like to see implemented.</p>
+      <div id="suggestionsContainer" class="applications-list"></div>
+    </main>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>

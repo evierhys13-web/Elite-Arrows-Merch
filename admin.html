@@ -45,11 +45,20 @@
             <div class="stat-number" id="pendingRoleCount">0</div>
             <div class="stat-label">Pending Roles</div>
           </div>
+          <div class="admin-stat-card">
+            <div class="stat-number" id="totalSuggestions">0</div>
+            <div class="stat-label">Suggestions</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-number" id="pendingSuggestions">0</div>
+            <div class="stat-label">New Suggestions</div>
+          </div>
         </div>
 
         <div class="admin-tabs">
           <button class="admin-tab active" onclick="switchTab('players', this)">Player Applications</button>
           <button class="admin-tab" onclick="switchTab('roles', this)">Role Applications</button>
+          <button class="admin-tab" onclick="switchTab('suggestions', this)">Suggestions</button>
         </div>
 
         <div class="admin-card" id="playersSection">
@@ -63,6 +72,13 @@
           <h3 class="card-title">Role Applications</h3>
           <div id="rolesList">
             <p style="color: var(--text-muted);">No applications found.</p>
+          </div>
+        </div>
+
+        <div class="admin-card" id="suggestionsSection" style="display: none;">
+          <h3 class="card-title">Suggestions</h3>
+          <div id="suggestionsList">
+            <p style="color: var(--text-muted);">No suggestions found.</p>
           </div>
         </div>
       </div>
@@ -85,6 +101,7 @@
       btn.classList.add('active');
       document.getElementById('playersSection').style.display = tab === 'players' ? 'block' : 'none';
       document.getElementById('rolesSection').style.display = tab === 'roles' ? 'block' : 'none';
+      document.getElementById('suggestionsSection').style.display = tab === 'suggestions' ? 'block' : 'none';
     }
 
     function updateApplicationStatus(storageKey, id, newStatus) {
@@ -104,21 +121,56 @@
       return div.innerHTML;
     }
 
+    function getSuggestions() {
+      try { return JSON.parse(localStorage.getItem('eliteArrowsSuggestions') || '[]'); } catch(e) { return []; }
+    }
+
+    function saveSuggestions(suggestions) {
+      localStorage.setItem('eliteArrowsSuggestions', JSON.stringify(suggestions));
+    }
+
+    var suggestionStatuses = {
+      new: { label: 'New', cls: 'status-pending' },
+      considering: { label: 'Being Considered', cls: 'status-approved' },
+      approved: { label: 'Under Approval', cls: 'status-approved' },
+      planned: { label: 'Planned', cls: 'status-approved' },
+      completed: { label: 'Completed', cls: 'status-approved' },
+      declined: { label: 'Declined', cls: 'status-rejected' }
+    };
+
+    function updateSuggestionStatus(id, newStatus) {
+      var suggestions = getSuggestions();
+      var s = suggestions.find(function(x) { return x.id === id; });
+      if (s) {
+        s.status = newStatus;
+        saveSuggestions(suggestions);
+        showToast('Suggestion updated to "' + suggestionStatuses[newStatus].label + '"', 'success');
+        loadAdmin();
+      }
+    }
+
     var positionLabels = {
       streamer: 'Streamer / Content Creator',
       moderator: 'Moderator / Admin',
       social: 'Social Media Manager',
+      sponsorship: 'Sponsorship Coordinator',
+      tournament: 'Tournament Organiser',
+      event: 'Event Coordinator',
+      recruiter: 'Recruiter',
       other: 'Other'
     };
 
     function loadAdmin() {
       var playerApps = JSON.parse(localStorage.getItem('eliteArrowsApplications') || '[]');
       var roleApps = JSON.parse(localStorage.getItem('eliteArrowsRoleApplications') || '[]');
+      var suggestions = getSuggestions();
 
       document.getElementById('totalPlayerCount').textContent = playerApps.length;
       document.getElementById('pendingPlayerCount').textContent = playerApps.filter(function(a) { return a.status === 'pending'; }).length;
       document.getElementById('totalRoleCount').textContent = roleApps.length;
       document.getElementById('pendingRoleCount').textContent = roleApps.filter(function(a) { return a.status === 'pending'; }).length;
+      document.getElementById('totalSuggestions').textContent = suggestions.length;
+      document.getElementById('pendingSuggestions').textContent = suggestions.filter(function(s) { return s.status === 'new'; }).length;
 
       // Player apps
       var playersContainer = document.getElementById('playersList');
@@ -152,6 +204,34 @@
         }).join('');
       }
 
+      // Suggestions
+      var suggestionsContainer = document.getElementById('suggestionsList');
+      if (suggestions.length === 0) {
+        suggestionsContainer.innerHTML = '<p style="color: var(--text-muted);">No suggestions found.</p>';
+      } else {
+        suggestionsContainer.innerHTML = suggestions.reverse().map(function(s) {
+          var statusObj = suggestionStatuses[s.status] || suggestionStatuses.new;
+          var statusOpts = Object.keys(suggestionStatuses).map(function(key) {
+            var selected = key === s.status ? 'selected' : '';
+            return '<option value="' + key + '" ' + selected + '>' + suggestionStatuses[key].label + '</option>';
+          }).join('');
+          return '<div class="app-admin-item">' +
+            '<div class="app-admin-info">' +
+              '<div class="name">' + escapeHtml(s.title) + '</div>' +
+              '<div class="meta">' + s.id + ' &middot; by ' + escapeHtml(s.submittedBy) + ' &middot; ' + new Date(s.submittedAt).toLocaleString() + ' &middot; ' +
+                '<span class="' + statusObj.cls + '" style="padding: 2px 8px; border-radius: 99px; font-weight: 700; font-size: 0.75rem;">' + statusObj.label + '</span></div>' +
+              '<div class="details"><p>' + escapeHtml(s.description) + '</p></div>' +
+              '<div class="meta" style="margin-top: 8px;">Votes: ' + (s.votes || 0) + '</div>' +
+              '<div style="margin-top: 12px;">' +
+                '<label style="font-size: 0.8rem; color: var(--text-muted); margin-right: 8px;">Status:</label>' +
+                '<select onchange="updateSuggestionStatus(\'' + s.id + '\', this.value)" style="background: #111827; color: #fff; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 6px 12px; font-family: inherit; font-size: 0.85rem;">' +
+                  statusOpts +
+                '</select>' +
+              '</div>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+      }
       // Role apps
       var rolesContainer = document.getElementById('rolesList');
       if (roleApps.length === 0) {
@@ -168,7 +248,6 @@
               '<div class="details">' +
                 '<p>Email: ' + escapeHtml(app.email) + '</p>' +
                 '<p>Position: <span class="position-tag">' + escapeHtml(positionLabels[app.position] || app.position) + '</span> &middot; Availability: ' + escapeHtml(app.availability) + '</p>' +
-                (app.portfolio ? '<p>Portfolio: <a href="' + escapeHtml(app.portfolio) + '" target="_blank" style="color: var(--accent-primary);">' + escapeHtml(app.portfolio) + '</a></p>' : '') +
               '</div>' +
               '<div class="why-join">' + escapeHtml(app.experience) + '</div>' +
             '</div>' +

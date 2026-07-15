@@ -110,7 +110,8 @@
       if (app) {
         app.status = newStatus;
         localStorage.setItem(storageKey, JSON.stringify(apps));
-        showToast(app.fullName + ' ' + (newStatus === 'approved' ? 'approved' : 'rejected') + '!', 'success');
+        var label = newStatus === 'approved' ? 'approved' : newStatus === 'onboarding_complete' ? 'onboarding complete' : 'rejected';
+        showToast(app.fullName + ' ' + label + '!', 'success');
         loadAdmin();
       }
     }
@@ -178,8 +179,8 @@
         playersContainer.innerHTML = '<p style="color: var(--text-muted);">No applications found.</p>';
       } else {
         playersContainer.innerHTML = playerApps.reverse().map(function(app) {
-          var statusClass = app.status === 'approved' ? 'status-approved' : app.status === 'rejected' ? 'status-rejected' : 'status-pending';
-          var statusLabel = app.status.charAt(0).toUpperCase() + app.status.slice(1);
+          var statusClass = app.status === 'approved' || app.status === 'onboarding_complete' ? 'status-approved' : app.status === 'rejected' ? 'status-rejected' : 'status-pending';
+          var statusLabel = app.status === 'onboarding_complete' ? 'Onboarding Complete' : app.status.charAt(0).toUpperCase() + app.status.slice(1);
           return '<div class="app-admin-item">' +
             '<div class="app-admin-info">' +
               '<div class="name">' + escapeHtml(app.fullName) + '</div>' +
@@ -197,6 +198,7 @@
             (app.status === 'pending'
               ? '<div class="app-admin-actions">' +
                   '<button class="btn-approve" onclick="updateApplicationStatus(\'eliteArrowsApplications\', \'' + app.id + '\', \'approved\')">Approve</button>' +
+                  '<button class="btn-approve" style="background: var(--accent-primary);" onclick="updateApplicationStatus(\'eliteArrowsApplications\', \'' + app.id + '\', \'onboarding_complete\')">Onboarding Complete</button>' +
                   '<button class="btn-reject" onclick="updateApplicationStatus(\'eliteArrowsApplications\', \'' + app.id + '\', \'rejected\')">Reject</button>' +
                 '</div>'
               : '') +

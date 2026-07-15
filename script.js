@@ -24,6 +24,13 @@ function saveRoleApplications(apps) {
   localStorage.setItem('eliteArrowsRoleApplications', JSON.stringify(apps));
 }
 
+function showOnboardingScreen(id) {
+  ['returningScreen','noUserScreen','onboardingForm','pendingScreen','approvedScreen','rejectedScreen'].forEach(function(s) {
+    var el = document.getElementById(s);
+    if (el) el.style.display = s === id ? 'block' : 'none';
+  });
+}
+
 function showToast(message, type) {
   const toast = document.getElementById('toast');
   if (!toast) return;
@@ -60,6 +67,76 @@ function setupMobileMenu() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  // ---- Onboarding Gate (index.html) ----
+  const urlParams = new URLSearchParams(window.location.search);
+  const isReturning = urlParams.get('returning') === 'true';
+  const isNewUser = urlParams.get('newUser') === 'true';
+  const userId = urlParams.get('userId') || urlParams.get('id');
+
+  if (userId) {
+    localStorage.setItem('eliteArrowsUserId', userId);
+  }
+
+  if (document.getElementById('returningScreen')) {
+    if (isReturning) {
+      showOnboardingScreen('returningScreen');
+    } else if (!isNewUser && !userId) {
+      showOnboardingScreen('noUserScreen');
+    } else {
+      const apps = getApplications();
+      let myApp = null;
+      if (userId) {
+        myApp = apps.find(a => a.userId === userId);
+      }
+      if (!myApp && apps.length > 0) {
+        myApp = apps[apps.length - 1];
+      }
+      if (myApp) {
+        if (myApp.status === 'approved' || myApp.status === 'onboarding_complete') {
+          showOnboardingScreen('approvedScreen');
+        } else if (myApp.status === 'rejected') {
+          showOnboardingScreen('rejectedScreen');
+        } else {
+          showOnboardingScreen('pendingScreen');
+        }
+      } else {
+        showOnboardingScreen('onboardingForm');
+      }
+    }
+  }
+
+  // Onboarding form submit
+  const onboardingForm = document.getElementById('onboardingAppForm');
+  if (onboardingForm) {
+    onboardingForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const app = {
+        id: 'EA-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substr(2, 4).toUpperCase(),
+        userId: localStorage.getItem('eliteArrowsUserId') || '',
+        fullName: document.getElementById('oFullName').value.trim(),
+        email: document.getElementById('oEmail').value.trim(),
+        age: parseInt(document.getElementById('oAge').value),
+        location: document.getElementById('oLocation').value.trim(),
+        dartcounter: document.getElementById('oDartcounter').value.trim(),
+        whatsapp: document.getElementById('oWhatsapp').value.trim(),
+        experience: document.getElementById('oExperience').value,
+        avgScore: parseFloat(document.getElementById('oAvgScore').value) || 0,
+        whyJoin: document.getElementById('oWhyJoin').value.trim(),
+        availability: document.getElementById('oAvailability').value,
+        referral: document.getElementById('oReferral').value.trim(),
+        type: 'player',
+        status: 'pending',
+        submittedAt: new Date().toISOString(),
+      };
+      const apps = getApplications();
+      apps.push(app);
+      saveApplications(apps);
+
+      showToast('Application submitted successfully!', 'success');
+      showOnboardingScreen('pendingScreen');
+    });
+  }
+
   setupMobileMenu();
 
   // Player Application Form
@@ -185,8 +262,8 @@ function renderApplications(container) {
   }
 
   container.innerHTML = apps.reverse().map(app => {
-    const statusClass = app.status === 'approved' ? 'status-approved' : app.status === 'rejected' ? 'status-rejected' : 'status-pending';
-    const statusLabel = app.status.charAt(0).toUpperCase() + app.status.slice(1);
+    const statusClass = app.status === 'approved' || app.status === 'onboarding_complete' ? 'status-approved' : app.status === 'rejected' ? 'status-rejected' : 'status-pending';
+    const statusLabel = app.status === 'onboarding_complete' ? 'Onboarding Complete' : app.status.charAt(0).toUpperCase() + app.status.slice(1);
 
     return `
       <div class="app-card">

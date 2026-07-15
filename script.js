@@ -42,7 +42,7 @@ function setupMobileMenu() {
 
   function close() {
     overlay.classList.remove('open');
-    nav.style.display = '';
+    nav.classList.remove('open');
   }
 
   menuBtn.addEventListener('click', () => {
@@ -51,7 +51,7 @@ function setupMobileMenu() {
       close();
     } else {
       overlay.classList.add('open');
-      nav.style.display = 'flex';
+      nav.classList.add('open');
     }
   });
 

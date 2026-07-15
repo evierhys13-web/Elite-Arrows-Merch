@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#f0f2f5" />
+  <meta name="description" content="Apply for a role within the Elite Arrows League" />
+  <title>Job / Role Applications - Elite Arrows League</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="page-wrapper">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">ELITE ARROWS</div>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="/" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Home
+        </a>
+        <a href="applications.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          Player Applications
+        </a>
+        <a href="roles.html" class="nav-item active">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Job / Role Applications
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Mobile Header -->
+    <div class="mobile-header">
+      <div class="sidebar-logo">ELITE ARROWS</div>
+      <button class="mobile-menu-btn" id="menuBtn" aria-label="Menu">☰</button>
+    </div>
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+    <nav class="mobile-nav" id="mobileNav">
+      <div class="sidebar-logo" style="padding: 24px; border-bottom: 1px solid var(--border); margin-bottom: 12px;">ELITE ARROWS</div>
+      <a href="/" class="nav-item">Home</a>
+      <a href="applications.html" class="nav-item">Player Applications</a>
+      <a href="roles.html" class="nav-item active">Job / Role Applications</a>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 32px;">
+        <h2 class="section-title" style="margin-bottom: 0;">Job / Role <span>Applications</span></h2>
+      </div>
+
+      <!-- Role descriptions -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; margin-bottom: 40px;">
+        <div class="card">
+          <div class="card-title" style="font-size: 1.1rem;">
+            <span>📹</span>
+            Streamer / Content Creator
+          </div>
+          <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; margin-bottom: 16px;">Stream league matches and create content for the Elite Arrows community. Must have streaming setup and basic video editing skills.</p>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+            <span style="background: #e8ecf1; padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">Streaming</span>
+            <span style="background: #e8ecf1; padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">Content Creation</span>
+            <span style="background: #e8ecf1; padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">Social Media</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="font-size: 1.1rem;">
+            <span>👮</span>
+            Moderator
+          </div>
+          <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; margin-bottom: 16px;">Help moderate the WhatsApp community and league chat. Ensure everyone follows the code of conduct and handle disputes fairly.</p>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+            <span style="background: #e8ecf1; padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">Community Management</span>
+            <span style="background: #e8ecf1; padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">Conflict Resolution</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="font-size: 1.1rem;">
+            <span>📊</span>
+            Stats & Data Analyst
+          </div>
+          <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; margin-bottom: 16px;">Track and analyze league statistics, create leaderboards, and provide insights to improve the league experience.</p>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+            <span style="background: #e8ecf1; padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">Data Analysis</span>
+            <span style="background: #e8ecf1; padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">Excel / Sheets</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="font-size: 1.1rem;">
+            <span>🎨</span>
+            Graphic Designer
+          </div>
+          <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; margin-bottom: 16px;">Create graphics, banners, and promotional material for the league. Experience with design tools required.</p>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+            <span style="background: #e8ecf1; padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">Graphic Design</span>
+            <span style="background: #e8ecf1; padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">Photoshop / Canva</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="font-size: 1.1rem;">
+            <span>📝</span>
+            Social Media Manager
+          </div>
+          <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; margin-bottom: 16px;">Manage the Elite Arrows social media presence across platforms. Create posts, engage with the community, and grow our following.</p>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+            <span style="background: #e8ecf1; padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">Social Media</span>
+            <span style="background: #e8ecf1; padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">Content Planning</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="font-size: 1.1rem;">
+            <span>💻</span>
+            Developer
+          </div>
+          <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; margin-bottom: 16px;">Help develop and maintain the Elite Arrows platform. Experience with React, Firebase, and mobile app development preferred.</p>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+            <span style="background: #e8ecf1; padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">React</span>
+            <span style="background: #e8ecf1; padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">Firebase</span>
+            <span style="background: #e8ecf1; padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">Mobile</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Role Application Form -->
+      <section class="application-section animate-slide-up" style="margin: 0 auto 40px;">
+        <div class="card">
+          <div class="card-title">
+            <span style="font-size: 1.5rem;">💼</span>
+            Apply for a Role
+          </div>
+          <form id="roleForm" class="application-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="roleFullName">Full Name</label>
+                <input type="text" id="roleFullName" class="form-input" placeholder="e.g. John Smith" required>
+              </div>
+              <div class="form-group">
+                <label for="roleEmail">Email Address</label>
+                <input type="email" id="roleEmail" class="form-input" placeholder="e.g. john@example.com" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="rolePosition">Position Applying For</label>
+              <select id="rolePosition" class="form-input" required>
+                <option value="">Select a role...</option>
+                <option value="streamer">Streamer / Content Creator</option>
+                <option value="moderator">Moderator</option>
+                <option value="analyst">Stats & Data Analyst</option>
+                <option value="designer">Graphic Designer</option>
+                <option value="social">Social Media Manager</option>
+                <option value="developer">Developer</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="roleExperience">Relevant Experience</label>
+              <textarea id="roleExperience" class="form-input form-textarea" placeholder="Tell us about your relevant experience, skills, and why you'd be great for this role..." required></textarea>
+            </div>
+            <div class="form-group">
+              <label for="roleAvailability">Weekly Availability</label>
+              <select id="roleAvailability" class="form-input" required>
+                <option value="">Select availability...</option>
+                <option value="1-5">1-5 hours per week</option>
+                <option value="5-10">5-10 hours per week</option>
+                <option value="10-20">10-20 hours per week</option>
+                <option value="20+">20+ hours per week</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="rolePortfolio">Portfolio / Examples (link)</label>
+              <input type="url" id="rolePortfolio" class="form-input" placeholder="e.g. https://your-portfolio.com">
+            </div>
+            <div class="form-group checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" id="roleAgreeTerms" required>
+                <span>I agree to the Elite Arrows League terms and conditions for volunteers</span>
+              </label>
+            </div>
+            <button type="submit" class="btn btn-primary btn-submit">Submit Application</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- Submitted Role Applications -->
+      <h2 class="section-title">My Role <span>Applications</span></h2>
+      <div id="roleApplicationsContainer" class="applications-list"></div>
+    </main>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>

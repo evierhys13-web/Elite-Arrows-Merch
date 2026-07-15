@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#1e1b4b" />
+  <meta name="theme-color" content="#f0f2f5" />
   <title>Admin - Elite Arrows League</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,8 +12,31 @@
   <style>
     .admin-container {
       max-width: 1000px;
-      margin: 40px auto;
-      padding: 0 20px;
+      margin: 0 auto;
+    }
+    .admin-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+    }
+    .admin-tab {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: var(--border-radius-sm);
+      padding: 10px 20px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: all 0.2s;
+    }
+    .admin-tab.active {
+      background: var(--accent-primary);
+      color: #fff;
+      border-color: var(--accent-primary);
     }
     .admin-card {
       background: var(--bg-card);
@@ -39,6 +62,7 @@
     .app-admin-info .name {
       font-size: 1.1rem;
       font-weight: 700;
+      color: var(--text-primary);
       margin-bottom: 4px;
     }
     .app-admin-info .meta {
@@ -57,10 +81,12 @@
     .app-admin-info .why-join {
       margin-top: 8px;
       padding: 10px;
-      background: #ffffff08;
+      background: #f9fafb;
       border-radius: var(--border-radius-sm);
       border-left: 3px solid var(--accent-primary);
       font-style: italic;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
     }
     .app-admin-actions {
       display: flex;
@@ -79,9 +105,6 @@
       font-family: inherit;
       font-size: 0.8rem;
     }
-    .btn-approve:hover {
-      opacity: 0.9;
-    }
     .btn-reject {
       background: var(--error);
       color: #fff;
@@ -93,12 +116,9 @@
       font-family: inherit;
       font-size: 0.8rem;
     }
-    .btn-reject:hover {
-      opacity: 0.9;
-    }
     .stats-row {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 16px;
       margin-bottom: 24px;
     }
@@ -124,9 +144,18 @@
       letter-spacing: 0.05em;
       margin-top: 4px;
     }
+    .position-tag {
+      display: inline-block;
+      background: #e8ecf1;
+      padding: 4px 10px;
+      border-radius: 99px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
     @media (max-width: 768px) {
       .stats-row {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
       }
       .app-admin-item {
         flex-direction: column;
@@ -143,35 +172,58 @@
 </head>
 <body>
   <div class="page-wrapper">
-    <header class="header">
-      <a href="/" class="header-logo">ELITE ARROWS ADMIN</a>
-      <nav class="header-nav">
-        <a href="/">Exit Admin</a>
-      </nav>
-    </header>
-
-    <main class="admin-container">
-      <h2 class="section-title">Applications <span>Management</span></h2>
-
-      <div class="stats-row" id="statsRow">
-        <div class="stat-card">
-          <div class="stat-number" id="totalCount">0</div>
-          <div class="stat-label">Total Applications</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number" id="pendingCount">0</div>
-          <div class="stat-label">Pending Review</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number" id="approvedCount">0</div>
-          <div class="stat-label">Approved</div>
-        </div>
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">ELITE ARROWS ADMIN</div>
       </div>
+      <nav class="sidebar-nav">
+        <a href="/" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Exit Admin
+        </a>
+      </nav>
+    </aside>
 
-      <div class="admin-card">
-        <h3 class="card-title">All Applications</h3>
-        <div id="applicationsList">
-          <p style="color: var(--text-muted);">No applications found.</p>
+    <main class="main-content">
+      <div class="admin-container">
+        <h2 class="section-title">Applications <span>Management</span></h2>
+
+        <div class="stats-row" id="statsRow">
+          <div class="stat-card">
+            <div class="stat-number" id="totalPlayerCount">0</div>
+            <div class="stat-label">Player Apps</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="pendingPlayerCount">0</div>
+            <div class="stat-label">Pending Players</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="totalRoleCount">0</div>
+            <div class="stat-label">Role Apps</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="pendingRoleCount">0</div>
+            <div class="stat-label">Pending Roles</div>
+          </div>
+        </div>
+
+        <div class="admin-tabs">
+          <button class="admin-tab active" onclick="switchTab('players', this)">Player Applications</button>
+          <button class="admin-tab" onclick="switchTab('roles', this)">Role Applications</button>
+        </div>
+
+        <div class="admin-card" id="playersSection">
+          <h3 class="card-title">Player Applications</h3>
+          <div id="playersList">
+            <p style="color: var(--text-muted);">No applications found.</p>
+          </div>
+        </div>
+
+        <div class="admin-card" id="rolesSection" style="display: none;">
+          <h3 class="card-title">Role Applications</h3>
+          <div id="rolesList">
+            <p style="color: var(--text-muted);">No applications found.</p>
+          </div>
         </div>
       </div>
     </main>
@@ -183,70 +235,114 @@
     function showToast(message, type) {
       const toast = document.getElementById('toast');
       toast.className = 'toast ' + (type || '');
-      toast.innerHTML = `<span class="toast-icon">✓</span> ${message}`;
+      toast.innerHTML = '<span class="toast-icon">✓</span> ' + message;
       toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 2500);
+      setTimeout(function() { toast.classList.remove('show'); }, 2500);
     }
 
-    function updateApplicationStatus(id, newStatus) {
-      const apps = JSON.parse(localStorage.getItem('eliteArrowsApplications') || '[]');
-      const app = apps.find(a => a.id === id);
+    function switchTab(tab, btn) {
+      document.querySelectorAll('.admin-tab').forEach(function(t) { t.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById('playersSection').style.display = tab === 'players' ? 'block' : 'none';
+      document.getElementById('rolesSection').style.display = tab === 'roles' ? 'block' : 'none';
+    }
+
+    function updateApplicationStatus(storageKey, id, newStatus) {
+      var apps = JSON.parse(localStorage.getItem(storageKey) || '[]');
+      var app = apps.find(function(a) { return a.id === id; });
       if (app) {
         app.status = newStatus;
-        localStorage.setItem('eliteArrowsApplications', JSON.stringify(apps));
-        showToast(`${app.fullName} ${newStatus === 'approved' ? 'approved' : 'rejected'}!`, 'success');
+        localStorage.setItem(storageKey, JSON.stringify(apps));
+        showToast(app.fullName + ' ' + (newStatus === 'approved' ? 'approved' : 'rejected') + '!', 'success');
         loadAdmin();
       }
     }
 
     function escapeHtml(str) {
-      const div = document.createElement('div');
+      var div = document.createElement('div');
       div.textContent = str;
       return div.innerHTML;
     }
 
+    var positionLabels = {
+      streamer: 'Streamer / Content Creator',
+      moderator: 'Moderator',
+      analyst: 'Stats & Data Analyst',
+      designer: 'Graphic Designer',
+      social: 'Social Media Manager',
+      developer: 'Developer',
+      other: 'Other'
+    };
+
     function loadAdmin() {
-      const apps = JSON.parse(localStorage.getItem('eliteArrowsApplications') || '[]');
-      const container = document.getElementById('applicationsList');
+      var playerApps = JSON.parse(localStorage.getItem('eliteArrowsApplications') || '[]');
+      var roleApps = JSON.parse(localStorage.getItem('eliteArrowsRoleApplications') || '[]');
 
-      document.getElementById('totalCount').textContent = apps.length;
-      document.getElementById('pendingCount').textContent = apps.filter(a => a.status === 'pending').length;
-      document.getElementById('approvedCount').textContent = apps.filter(a => a.status === 'approved').length;
+      document.getElementById('totalPlayerCount').textContent = playerApps.length;
+      document.getElementById('pendingPlayerCount').textContent = playerApps.filter(function(a) { return a.status === 'pending'; }).length;
+      document.getElementById('totalRoleCount').textContent = roleApps.length;
+      document.getElementById('pendingRoleCount').textContent = roleApps.filter(function(a) { return a.status === 'pending'; }).length;
 
-      if (apps.length === 0) {
-        container.innerHTML = '<p style="color: var(--text-muted);">No applications found.</p>';
-        return;
+      // Player apps
+      var playersContainer = document.getElementById('playersList');
+      if (playerApps.length === 0) {
+        playersContainer.innerHTML = '<p style="color: var(--text-muted);">No applications found.</p>';
+      } else {
+        playersContainer.innerHTML = playerApps.reverse().map(function(app) {
+          var statusClass = app.status === 'approved' ? 'status-approved' : app.status === 'rejected' ? 'status-rejected' : 'status-pending';
+          var statusLabel = app.status.charAt(0).toUpperCase() + app.status.slice(1);
+          return '<div class="app-admin-item">' +
+            '<div class="app-admin-info">' +
+              '<div class="name">' + escapeHtml(app.fullName) + '</div>' +
+              '<div class="meta">' + app.id + ' &middot; ' + new Date(app.submittedAt).toLocaleString() + ' &middot; ' +
+                '<span class="' + statusClass + '" style="padding: 2px 8px; border-radius: 99px; font-weight: 700; font-size: 0.75rem;">' + statusLabel + '</span></div>' +
+              '<div class="details">' +
+                '<p>Email: ' + escapeHtml(app.email) + '</p>' +
+                '<p>Age: ' + app.age + ' &middot; Location: ' + escapeHtml(app.location) + '</p>' +
+                '<p>Experience: ' + escapeHtml(app.experience) + ' &middot; Avg Score: ' + (app.avgScore || 'N/A') + '</p>' +
+                '<p>Availability: ' + escapeHtml(app.availability) + ' &middot; Referral: ' + escapeHtml(app.referral || 'N/A') + '</p>' +
+              '</div>' +
+              '<div class="why-join">' + escapeHtml(app.whyJoin) + '</div>' +
+            '</div>' +
+            (app.status === 'pending'
+              ? '<div class="app-admin-actions">' +
+                  '<button class="btn-approve" onclick="updateApplicationStatus(\'eliteArrowsApplications\', \'' + app.id + '\', \'approved\')">Approve</button>' +
+                  '<button class="btn-reject" onclick="updateApplicationStatus(\'eliteArrowsApplications\', \'' + app.id + '\', \'rejected\')">Reject</button>' +
+                '</div>'
+              : '') +
+          '</div>';
+        }).join('');
       }
 
-      container.innerHTML = apps.reverse().map(app => {
-        const statusClass = app.status === 'approved' ? 'status-approved' : app.status === 'rejected' ? 'status-rejected' : 'status-pending';
-        const statusLabel = app.status.charAt(0).toUpperCase() + app.status.slice(1);
-
-        return `
-          <div class="app-admin-item">
-            <div class="app-admin-info">
-              <div class="name">${escapeHtml(app.fullName)}</div>
-              <div class="meta">
-                ${app.id} &middot; ${new Date(app.submittedAt).toLocaleString()} &middot;
-                <span class="${statusClass}" style="padding: 2px 8px; border-radius: 99px; font-weight: 700; font-size: 0.75rem;">${statusLabel}</span>
-              </div>
-              <div class="details">
-                <p>Email: ${escapeHtml(app.email)}</p>
-                <p>Age: ${app.age} &middot; Location: ${escapeHtml(app.location)}</p>
-                <p>Experience: ${escapeHtml(app.experience)} &middot; Avg Score: ${app.avgScore || 'N/A'}</p>
-                <p>Availability: ${escapeHtml(app.availability)} &middot; Referral: ${escapeHtml(app.referral) || 'N/A'}</p>
-              </div>
-              <div class="why-join">${escapeHtml(app.whyJoin)}</div>
-            </div>
-            ${app.status === 'pending' ? `
-              <div class="app-admin-actions">
-                <button class="btn-approve" onclick="updateApplicationStatus('${app.id}', 'approved')">Approve</button>
-                <button class="btn-reject" onclick="updateApplicationStatus('${app.id}', 'rejected')">Reject</button>
-              </div>
-            ` : ''}
-          </div>
-        `;
-      }).join('');
+      // Role apps
+      var rolesContainer = document.getElementById('rolesList');
+      if (roleApps.length === 0) {
+        rolesContainer.innerHTML = '<p style="color: var(--text-muted);">No applications found.</p>';
+      } else {
+        rolesContainer.innerHTML = roleApps.reverse().map(function(app) {
+          var statusClass = app.status === 'approved' ? 'status-approved' : app.status === 'rejected' ? 'status-rejected' : 'status-pending';
+          var statusLabel = app.status.charAt(0).toUpperCase() + app.status.slice(1);
+          return '<div class="app-admin-item">' +
+            '<div class="app-admin-info">' +
+              '<div class="name">' + escapeHtml(app.fullName) + '</div>' +
+              '<div class="meta">' + app.id + ' &middot; ' + new Date(app.submittedAt).toLocaleString() + ' &middot; ' +
+                '<span class="' + statusClass + '" style="padding: 2px 8px; border-radius: 99px; font-weight: 700; font-size: 0.75rem;">' + statusLabel + '</span></div>' +
+              '<div class="details">' +
+                '<p>Email: ' + escapeHtml(app.email) + '</p>' +
+                '<p>Position: <span class="position-tag">' + escapeHtml(positionLabels[app.position] || app.position) + '</span> &middot; Availability: ' + escapeHtml(app.availability) + '</p>' +
+                (app.portfolio ? '<p>Portfolio: <a href="' + escapeHtml(app.portfolio) + '" target="_blank" style="color: var(--accent-primary);">' + escapeHtml(app.portfolio) + '</a></p>' : '') +
+              '</div>' +
+              '<div class="why-join">' + escapeHtml(app.experience) + '</div>' +
+            '</div>' +
+            (app.status === 'pending'
+              ? '<div class="app-admin-actions">' +
+                  '<button class="btn-approve" onclick="updateApplicationStatus(\'eliteArrowsRoleApplications\', \'' + app.id + '\', \'approved\')">Approve</button>' +
+                  '<button class="btn-reject" onclick="updateApplicationStatus(\'eliteArrowsRoleApplications\', \'' + app.id + '\', \'rejected\')">Reject</button>' +
+                '</div>'
+              : '') +
+          '</div>';
+        }).join('');
+      }
     }
 
     document.addEventListener('DOMContentLoaded', loadAdmin);

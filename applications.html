@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#1e1b4b" />
-  <meta name="description" content="View your Elite Arrows League application status" />
-  <title>Applications - Elite Arrows League</title>
+  <meta name="theme-color" content="#f0f2f5" />
+  <meta name="description" content="Submit your Elite Arrows League player application" />
+  <title>Player Applications - Elite Arrows League</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -13,66 +13,140 @@
 </head>
 <body>
   <div class="page-wrapper">
-    <!-- Header -->
-    <header class="header">
-      <a href="/" class="header-logo">ELITE ARROWS LEAGUE</a>
-      <nav class="header-nav">
-        <a href="/">Home</a>
-        <a href="applications.html" class="active">Applications</a>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">ELITE ARROWS</div>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="/" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Home
+        </a>
+        <a href="applications.html" class="nav-item active">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          Player Applications
+        </a>
+        <a href="roles.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Job / Role Applications
+        </a>
       </nav>
-      <button class="mobile-menu-btn" id="menuBtn" aria-label="Menu">☰</button>
-    </header>
+    </aside>
 
-    <!-- Mobile Navigation -->
+    <!-- Mobile Header -->
+    <div class="mobile-header">
+      <div class="sidebar-logo">ELITE ARROWS</div>
+      <button class="mobile-menu-btn" id="menuBtn" aria-label="Menu">☰</button>
+    </div>
     <div class="mobile-overlay" id="mobileOverlay"></div>
     <nav class="mobile-nav" id="mobileNav">
-      <div class="header-logo">ELITE ARROWS LEAGUE</div>
-      <a href="/">Home</a>
-      <a href="applications.html" class="active">Applications</a>
+      <div class="sidebar-logo" style="padding: 24px; border-bottom: 1px solid var(--border); margin-bottom: 12px;">ELITE ARROWS</div>
+      <a href="/" class="nav-item">Home</a>
+      <a href="applications.html" class="nav-item active">Player Applications</a>
+      <a href="roles.html" class="nav-item">Job / Role Applications</a>
     </nav>
 
     <!-- Main Content -->
     <main class="main-content">
       <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 32px;">
-        <h2 class="section-title" style="margin-bottom: 0;">My <span>Applications</span></h2>
-        <a href="/" class="btn btn-primary">New Application</a>
+        <h2 class="section-title" style="margin-bottom: 0;">Player <span>Application</span></h2>
       </div>
 
+      <!-- Application Form -->
+      <section class="application-section animate-slide-up" style="margin: 0 auto 40px;">
+        <div class="card">
+          <div class="card-title">
+            <span style="font-size: 1.5rem;">🎯</span>
+            Apply to Join the League
+          </div>
+          <form id="applicationForm" class="application-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="fullName">Full Name</label>
+                <input type="text" id="fullName" class="form-input" placeholder="e.g. John Smith" required>
+              </div>
+              <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" class="form-input" placeholder="e.g. john@example.com" required>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="age">Age</label>
+                <input type="number" id="age" class="form-input" placeholder="e.g. 25" min="16" max="99" required>
+              </div>
+              <div class="form-group">
+                <label for="location">City / Location</label>
+                <input type="text" id="location" class="form-input" placeholder="e.g. London, UK" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="experience">Darts Experience</label>
+              <select id="experience" class="form-input" required>
+                <option value="">Select your experience level...</option>
+                <option value="beginner">Beginner - Just starting out</option>
+                <option value="intermediate">Intermediate - Play casually with friends</option>
+                <option value="advanced">Advanced - League or tournament experience</option>
+                <option value="professional">Professional - Competed at a high level</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="avgScore">Average Score (3-dart)</label>
+              <input type="number" id="avgScore" class="form-input" placeholder="e.g. 60" min="0" max="180" step="0.1">
+            </div>
+            <div class="form-group">
+              <label for="whyJoin">Why do you want to join Elite Arrows?</label>
+              <textarea id="whyJoin" class="form-input form-textarea" placeholder="Tell us about yourself, your goals, and why you'd be a great addition to the league..." required></textarea>
+            </div>
+            <div class="form-group">
+              <label for="availability">Availability</label>
+              <select id="availability" class="form-input" required>
+                <option value="">Select availability...</option>
+                <option value="weekdays">Weekdays (Mon-Fri)</option>
+                <option value="weekends">Weekends</option>
+                <option value="evenings">Evenings (after 6pm)</option>
+                <option value="flexible">Flexible - Available anytime</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="referral">How did you hear about us?</label>
+              <input type="text" id="referral" class="form-input" placeholder="e.g. Social media, friend, local pub...">
+            </div>
+            <div class="form-group checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" id="agreeTerms" required>
+                <span>I agree to the Elite Arrows League rules and code of conduct</span>
+              </label>
+            </div>
+            <button type="submit" class="btn btn-primary btn-submit">Submit Application</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- Submitted Applications -->
+      <h2 class="section-title">My <span>Applications</span></h2>
       <div id="applicationsContainer" class="applications-list"></div>
-    </main>
 
-    <!-- Footer -->
-    <footer class="footer">
-      <div class="footer-grid">
-        <div class="footer-col">
-          <h4>League</h4>
-          <a href="#">Standings</a>
-          <a href="#">Rules</a>
-          <a href="#">Schedule</a>
+      <!-- Features -->
+      <section class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🏆</div>
+          <h3>Competitive Play</h3>
+          <p>Compete in a structured league format with players at your skill level. Climb the rankings and prove yourself.</p>
         </div>
-        <div class="footer-col">
-          <h4>Support</h4>
-          <a href="#">FAQ</a>
-          <a href="#">Contact Us</a>
-          <a href="#">Report Issue</a>
+        <div class="feature-card">
+          <div class="feature-icon">🎯</div>
+          <h3>Professional Setup</h3>
+          <p>Play on professional-grade boards with proper lighting and scoring. Every match feels like the big stage.</p>
         </div>
-        <div class="footer-col">
-          <h4>Company</h4>
-          <a href="#">About Us</a>
-          <a href="#">Sponsors</a>
-          <a href="#">Press</a>
+        <div class="feature-card">
+          <div class="feature-icon">🤝</div>
+          <h3>Community</h3>
+          <p>Join a welcoming community of darts enthusiasts. Make friends, share tips, and grow together.</p>
         </div>
-        <div class="footer-col">
-          <h4>Legal</h4>
-          <a href="#">Privacy Policy</a>
-          <a href="#">Terms of Service</a>
-          <a href="#">Code of Conduct</a>
-        </div>
-      </div>
-      <div class="footer-bottom">
-        &copy; 2026 Elite Arrows League. All rights reserved.
-      </div>
-    </footer>
+      </section>
+    </main>
   </div>
 
   <!-- Toast -->

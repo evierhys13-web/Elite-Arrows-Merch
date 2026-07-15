@@ -1,3 +1,4 @@
+// ---- Player Applications ----
 function getApplications() {
   try {
     return JSON.parse(localStorage.getItem('eliteArrowsApplications')) || [];
@@ -10,8 +11,17 @@ function saveApplications(apps) {
   localStorage.setItem('eliteArrowsApplications', JSON.stringify(apps));
 }
 
-function getApplicationCount() {
-  return getApplications().length;
+// ---- Role Applications ----
+function getRoleApplications() {
+  try {
+    return JSON.parse(localStorage.getItem('eliteArrowsRoleApplications')) || [];
+  } catch {
+    return [];
+  }
+}
+
+function saveRoleApplications(apps) {
+  localStorage.setItem('eliteArrowsRoleApplications', JSON.stringify(apps));
 }
 
 function showToast(message, type) {
@@ -32,12 +42,17 @@ function setupMobileMenu() {
 
   function close() {
     overlay.classList.remove('open');
-    nav.classList.remove('open');
+    nav.style.display = '';
   }
 
   menuBtn.addEventListener('click', () => {
-    overlay.classList.toggle('open');
-    nav.classList.toggle('open');
+    const isOpen = overlay.classList.contains('open');
+    if (isOpen) {
+      close();
+    } else {
+      overlay.classList.add('open');
+      nav.style.display = 'flex';
+    }
   });
 
   overlay.addEventListener('click', close);
@@ -47,32 +62,24 @@ function setupMobileMenu() {
 document.addEventListener('DOMContentLoaded', () => {
   setupMobileMenu();
 
+  // Player Application Form
   const form = document.getElementById('applicationForm');
   if (form) {
     form.addEventListener('submit', (e) => {
       e.preventDefault();
 
-      const fullName = document.getElementById('fullName').value.trim();
-      const email = document.getElementById('email').value.trim();
-      const age = parseInt(document.getElementById('age').value);
-      const location = document.getElementById('location').value.trim();
-      const experience = document.getElementById('experience').value;
-      const avgScore = parseFloat(document.getElementById('avgScore').value) || 0;
-      const whyJoin = document.getElementById('whyJoin').value.trim();
-      const availability = document.getElementById('availability').value;
-      const referral = document.getElementById('referral').value.trim();
-
       const application = {
         id: 'EA-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substr(2, 4).toUpperCase(),
-        fullName,
-        email,
-        age,
-        location,
-        experience,
-        avgScore,
-        whyJoin,
-        availability,
-        referral,
+        fullName: document.getElementById('fullName').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        age: parseInt(document.getElementById('age').value),
+        location: document.getElementById('location').value.trim(),
+        experience: document.getElementById('experience').value,
+        avgScore: parseFloat(document.getElementById('avgScore').value) || 0,
+        whyJoin: document.getElementById('whyJoin').value.trim(),
+        availability: document.getElementById('availability').value,
+        referral: document.getElementById('referral').value.trim(),
+        type: 'player',
         status: 'pending',
         submittedAt: new Date().toISOString(),
       };
@@ -81,26 +88,51 @@ document.addEventListener('DOMContentLoaded', () => {
       apps.push(application);
       saveApplications(apps);
 
-      showToast('Application submitted successfully! We\'ll be in touch.', 'success');
+      showToast('Application submitted successfully!', 'success');
       form.reset();
-
-      setTimeout(() => {
-        window.location.href = 'applications.html';
-      }, 1200);
+      renderApplications(document.getElementById('applicationsContainer'));
     });
   }
 
-  // Applications page
+  // Role Application Form
+  const roleForm = document.getElementById('roleForm');
+  if (roleForm) {
+    roleForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const application = {
+        id: 'EA-ROLE-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substr(2, 4).toUpperCase(),
+        fullName: document.getElementById('roleFullName').value.trim(),
+        email: document.getElementById('roleEmail').value.trim(),
+        position: document.getElementById('rolePosition').value,
+        experience: document.getElementById('roleExperience').value.trim(),
+        availability: document.getElementById('roleAvailability').value,
+        portfolio: document.getElementById('rolePortfolio').value.trim(),
+        type: 'role',
+        status: 'pending',
+        submittedAt: new Date().toISOString(),
+      };
+
+      const apps = getRoleApplications();
+      apps.push(application);
+      saveRoleApplications(apps);
+
+      showToast('Role application submitted successfully!', 'success');
+      roleForm.reset();
+      renderRoleApplications(document.getElementById('roleApplicationsContainer'));
+    });
+  }
+
+  // Render player applications
   const appsContainer = document.getElementById('applicationsContainer');
   if (appsContainer) {
     renderApplications(appsContainer);
   }
 
-  const pendingCount = document.getElementById('pendingCount');
-  if (pendingCount) {
-    const apps = getApplications();
-    const pending = apps.filter(a => a.status === 'pending').length;
-    pendingCount.textContent = pending;
+  // Render role applications
+  const roleContainer = document.getElementById('roleApplicationsContainer');
+  if (roleContainer) {
+    renderRoleApplications(roleContainer);
   }
 });
 
@@ -112,8 +144,7 @@ function renderApplications(container) {
       <div class="empty-state">
         <div class="empty-icon">📋</div>
         <h3>No applications yet</h3>
-        <p>Submit your application on the home page to get started.</p>
-        <a href="/" class="btn btn-primary">Apply Now</a>
+        <p>Submit your player application above to get started.</p>
       </div>
     `;
     return;
@@ -141,6 +172,56 @@ function renderApplications(container) {
           <div class="app-detail"><span class="detail-label">Availability:</span> ${escapeHtml(app.availability)}</div>
           <div class="app-detail"><span class="detail-label">Referral:</span> ${escapeHtml(app.referral) || 'N/A'}</div>
           <div class="app-detail app-why-join"><span class="detail-label">Why Join:</span> ${escapeHtml(app.whyJoin)}</div>
+          <div class="app-detail"><span class="detail-label">Submitted:</span> ${new Date(app.submittedAt).toLocaleString()}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderRoleApplications(container) {
+  const apps = getRoleApplications();
+
+  if (apps.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">💼</div>
+        <h3>No role applications yet</h3>
+        <p>Submit a role application above to get started.</p>
+      </div>
+    `;
+    return;
+  }
+
+  const positionLabels = {
+    streamer: 'Streamer / Content Creator',
+    moderator: 'Moderator',
+    analyst: 'Stats & Data Analyst',
+    designer: 'Graphic Designer',
+    social: 'Social Media Manager',
+    developer: 'Developer',
+    other: 'Other',
+  };
+
+  container.innerHTML = apps.reverse().map(app => {
+    const statusClass = app.status === 'approved' ? 'status-approved' : app.status === 'rejected' ? 'status-rejected' : 'status-pending';
+    const statusLabel = app.status.charAt(0).toUpperCase() + app.status.slice(1);
+
+    return `
+      <div class="app-card">
+        <div class="app-card-header">
+          <div>
+            <div class="app-name">${escapeHtml(app.fullName)}</div>
+            <div class="app-id">${app.id}</div>
+          </div>
+          <span class="app-status ${statusClass}">${statusLabel}</span>
+        </div>
+        <div class="app-card-body">
+          <div class="app-detail"><span class="detail-label">Email:</span> ${escapeHtml(app.email)}</div>
+          <div class="app-detail"><span class="detail-label">Position:</span> ${escapeHtml(positionLabels[app.position] || app.position)}</div>
+          <div class="app-detail"><span class="detail-label">Availability:</span> ${escapeHtml(app.availability)}</div>
+          ${app.portfolio ? `<div class="app-detail"><span class="detail-label">Portfolio:</span> <a href="${escapeHtml(app.portfolio)}" target="_blank" style="color: var(--accent-primary);">${escapeHtml(app.portfolio)}</a></div>` : ''}
+          <div class="app-detail app-why-join"><span class="detail-label">Experience:</span> ${escapeHtml(app.experience)}</div>
           <div class="app-detail"><span class="detail-label">Submitted:</span> ${new Date(app.submittedAt).toLocaleString()}</div>
         </div>
       </div>

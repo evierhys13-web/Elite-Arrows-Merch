@@ -9,166 +9,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
-  <style>
-    .admin-container {
-      max-width: 1000px;
-      margin: 0 auto;
-    }
-    .admin-tabs {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 24px;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 12px;
-    }
-    .admin-tab {
-      background: none;
-      border: 1px solid var(--border);
-      border-radius: var(--border-radius-sm);
-      padding: 10px 20px;
-      font-family: inherit;
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      color: var(--text-secondary);
-      transition: all 0.2s;
-    }
-    .admin-tab.active {
-      background: var(--accent-primary);
-      color: #fff;
-      border-color: var(--accent-primary);
-    }
-    .admin-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--border-radius-lg);
-      padding: 24px;
-      margin-bottom: 24px;
-    }
-    .app-admin-item {
-      padding: 20px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 20px;
-    }
-    .app-admin-item:last-child {
-      border-bottom: none;
-    }
-    .app-admin-info {
-      flex: 1;
-    }
-    .app-admin-info .name {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--text-primary);
-      margin-bottom: 4px;
-    }
-    .app-admin-info .meta {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      margin-bottom: 8px;
-    }
-    .app-admin-info .details {
-      font-size: 0.9rem;
-      color: var(--text-secondary);
-      line-height: 1.6;
-    }
-    .app-admin-info .details p {
-      margin: 4px 0;
-    }
-    .app-admin-info .why-join {
-      margin-top: 8px;
-      padding: 10px;
-      background: #f9fafb;
-      border-radius: var(--border-radius-sm);
-      border-left: 3px solid var(--accent-primary);
-      font-style: italic;
-      color: var(--text-secondary);
-      font-size: 0.9rem;
-    }
-    .app-admin-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      flex-shrink: 0;
-    }
-    .btn-approve {
-      background: var(--success);
-      color: #fff;
-      border: none;
-      padding: 8px 20px;
-      border-radius: var(--border-radius-sm);
-      cursor: pointer;
-      font-weight: 700;
-      font-family: inherit;
-      font-size: 0.8rem;
-    }
-    .btn-reject {
-      background: var(--error);
-      color: #fff;
-      border: none;
-      padding: 8px 20px;
-      border-radius: var(--border-radius-sm);
-      cursor: pointer;
-      font-weight: 700;
-      font-family: inherit;
-      font-size: 0.8rem;
-    }
-    .stats-row {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-    .stat-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--border-radius-md);
-      padding: 20px;
-      text-align: center;
-    }
-    .stat-card .stat-number {
-      font-size: 2rem;
-      font-weight: 900;
-      background: linear-gradient(to right, var(--accent-primary), var(--accent-cyan));
-      -webkit-text-fill-color: transparent;
-      -webkit-background-clip: text;
-      background-clip: text;
-    }
-    .stat-card .stat-label {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-top: 4px;
-    }
-    .position-tag {
-      display: inline-block;
-      background: #e8ecf1;
-      padding: 4px 10px;
-      border-radius: 99px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: var(--text-secondary);
-    }
-    @media (max-width: 768px) {
-      .stats-row {
-        grid-template-columns: repeat(2, 1fr);
-      }
-      .app-admin-item {
-        flex-direction: column;
-      }
-      .app-admin-actions {
-        flex-direction: row;
-        width: 100%;
-      }
-      .app-admin-actions button {
-        flex: 1;
-      }
-    }
-  </style>
 </head>
 <body>
   <div class="page-wrapper">
@@ -189,19 +29,19 @@
         <h2 class="section-title">Applications <span>Management</span></h2>
 
         <div class="stats-row" id="statsRow">
-          <div class="stat-card">
+          <div class="admin-stat-card">
             <div class="stat-number" id="totalPlayerCount">0</div>
             <div class="stat-label">Player Apps</div>
           </div>
-          <div class="stat-card">
+          <div class="admin-stat-card">
             <div class="stat-number" id="pendingPlayerCount">0</div>
             <div class="stat-label">Pending Players</div>
           </div>
-          <div class="stat-card">
+          <div class="admin-stat-card">
             <div class="stat-number" id="totalRoleCount">0</div>
             <div class="stat-label">Role Apps</div>
           </div>
-          <div class="stat-card">
+          <div class="admin-stat-card">
             <div class="stat-number" id="pendingRoleCount">0</div>
             <div class="stat-label">Pending Roles</div>
           </div>
@@ -266,11 +106,8 @@
 
     var positionLabels = {
       streamer: 'Streamer / Content Creator',
-      moderator: 'Moderator',
-      analyst: 'Stats & Data Analyst',
-      designer: 'Graphic Designer',
+      moderator: 'Moderator / Admin',
       social: 'Social Media Manager',
-      developer: 'Developer',
       other: 'Other'
     };
 
@@ -299,6 +136,7 @@
               '<div class="details">' +
                 '<p>Email: ' + escapeHtml(app.email) + '</p>' +
                 '<p>Age: ' + app.age + ' &middot; Location: ' + escapeHtml(app.location) + '</p>' +
+                '<p>DartCounter: ' + escapeHtml(app.dartcounter || 'N/A') + ' &middot; WhatsApp: ' + escapeHtml(app.whatsapp || 'N/A') + '</p>' +
                 '<p>Experience: ' + escapeHtml(app.experience) + ' &middot; Avg Score: ' + (app.avgScore || 'N/A') + '</p>' +
                 '<p>Availability: ' + escapeHtml(app.availability) + ' &middot; Referral: ' + escapeHtml(app.referral || 'N/A') + '</p>' +
               '</div>' +

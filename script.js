@@ -74,6 +74,8 @@ document.addEventListener('DOMContentLoaded', () => {
         email: document.getElementById('email').value.trim(),
         age: parseInt(document.getElementById('age').value),
         location: document.getElementById('location').value.trim(),
+        dartcounter: document.getElementById('dartcounter').value.trim(),
+        whatsapp: document.getElementById('whatsapp').value.trim(),
         experience: document.getElementById('experience').value,
         avgScore: parseFloat(document.getElementById('avgScore').value) || 0,
         whyJoin: document.getElementById('whyJoin').value.trim(),
@@ -167,6 +169,8 @@ function renderApplications(container) {
           <div class="app-detail"><span class="detail-label">Email:</span> ${escapeHtml(app.email)}</div>
           <div class="app-detail"><span class="detail-label">Age:</span> ${app.age}</div>
           <div class="app-detail"><span class="detail-label">Location:</span> ${escapeHtml(app.location)}</div>
+          <div class="app-detail"><span class="detail-label">DartCounter:</span> ${escapeHtml(app.dartcounter)}</div>
+          <div class="app-detail"><span class="detail-label">WhatsApp:</span> ${escapeHtml(app.whatsapp)}</div>
           <div class="app-detail"><span class="detail-label">Experience:</span> ${escapeHtml(app.experience)}</div>
           <div class="app-detail"><span class="detail-label">Avg Score:</span> ${app.avgScore || 'N/A'}</div>
           <div class="app-detail"><span class="detail-label">Availability:</span> ${escapeHtml(app.availability)}</div>
@@ -195,11 +199,8 @@ function renderRoleApplications(container) {
 
   const positionLabels = {
     streamer: 'Streamer / Content Creator',
-    moderator: 'Moderator',
-    analyst: 'Stats & Data Analyst',
-    designer: 'Graphic Designer',
+    moderator: 'Moderator / Admin',
     social: 'Social Media Manager',
-    developer: 'Developer',
     other: 'Other',
   };
 

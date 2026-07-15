@@ -9,9 +9,55 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
+  <style>
+    .admin-auth-gate {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 60vh;
+      text-align: center;
+      padding: 40px 20px;
+    }
+    .admin-auth-gate h2 {
+      font-size: 1.8rem;
+      font-weight: 900;
+      margin-bottom: 12px;
+    }
+    .admin-auth-gate p {
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+    }
+    .admin-auth-gate input[type="email"] {
+      max-width: 400px;
+      width: 100%;
+    }
+    .admin-auth-error {
+      color: var(--error, #ef4444);
+      margin-top: 12px;
+      font-size: 0.9rem;
+    }
+  </style>
 </head>
 <body>
-  <div class="page-wrapper">
+  <!-- Auth gate -->
+  <div id="adminAuthGate" class="page-wrapper">
+    <main style="display: flex; align-items: center; justify-content: center; width: 100%; min-height: 100vh;">
+      <div class="admin-auth-gate">
+        <h2>Admin <span style="background: linear-gradient(to right, var(--accent-primary), var(--accent-cyan)); -webkit-text-fill-color: transparent; -webkit-background-clip: text; background-clip: text;">Access</span></h2>
+        <p>Enter the authorised admin email to access the panel.</p>
+        <input type="email" id="adminEmailInput" class="form-input" placeholder="admin@example.com" style="max-width: 400px;">
+        <label class="checkbox-label" style="margin-top: 16px; justify-content: center;">
+          <input type="checkbox" id="adminRemember">
+          <span>Remember me</span>
+        </label>
+        <button class="btn btn-primary" style="margin-top: 16px;" onclick="verifyAdmin()">Verify</button>
+        <div id="adminAuthError" class="admin-auth-error"></div>
+      </div>
+    </main>
+  </div>
+
+  <div id="adminPanel" class="page-wrapper" style="display: none;">
     <aside class="sidebar">
       <div class="sidebar-header">
         <div class="sidebar-logo">ELITE ARROWS ADMIN</div>
@@ -264,7 +310,34 @@
       }
     }
 
-    document.addEventListener('DOMContentLoaded', loadAdmin);
+    function verifyAdmin() {
+      var email = document.getElementById('adminEmailInput').value.trim().toLowerCase();
+      if (email === 'rhyshowe2023@outlook.com') {
+        if (document.getElementById('adminRemember').checked) {
+          localStorage.setItem('eliteArrowsAdminAuth', 'true');
+        }
+        document.getElementById('adminAuthGate').style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'flex';
+        loadAdmin();
+      } else {
+        document.getElementById('adminAuthError').textContent = 'Unauthorised email. Access denied.';
+      }
+    }
+
+    function checkPersistedAuth() {
+      if (localStorage.getItem('eliteArrowsAdminAuth') === 'true') {
+        document.getElementById('adminAuthGate').style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'flex';
+        loadAdmin();
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('adminEmailInput').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') verifyAdmin();
+      });
+      checkPersistedAuth();
+    });
   </script>
 </body>
 </html>

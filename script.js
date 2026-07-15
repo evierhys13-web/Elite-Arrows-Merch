@@ -145,7 +145,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const suggestion = {
         id: 'EA-SUG-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substr(2, 4).toUpperCase(),
         submittedBy: document.getElementById('sugName').value.trim(),
-        email: document.getElementById('sugEmail').value.trim(),
         title: document.getElementById('sugTitle').value.trim(),
         description: document.getElementById('sugDescription').value.trim(),
         category: document.getElementById('sugCategory').value,

@@ -154,11 +154,70 @@
 
     window.updateApplicationStatus = async function(collectionName, id, newStatus) {
       try {
-        await updateDoc(doc(db, collectionName, id), { status: newStatus });
-        window.showToast('Status updated successfully!', 'success');
+        const snapshot = await getDocs(query(collection(db, collectionName)));
+        const docRef = snapshot.docs.find(d => d.data().id === id);
+
+        if (!docRef) {
+          window.showToast('Could not find application in database.', 'error');
+          return;
+        }
+
+        const appData = docRef.data();
+        await updateDoc(doc(db, collectionName, docRef.id), { status: newStatus });
+
+        // Trigger Email Notification
+        try {
+          let subject = '';
+          let html = '';
+
+          if (newStatus === 'approved') {
+            subject = 'Application Approved - Elite Arrows League';
+            html = `
+              <div style="font-family: sans-serif; color: #1e1b4b;">
+                <h2>Congratulations, ${appData.fullName}!</h2>
+                <p>Your application for the position of <strong>${appData.position || 'Player'}</strong> has been approved.</p>
+                <p>The next step is a short interview (5-10 minutes) to discuss the role and expectations.</p>
+                <p><strong>An admin will contact you via WhatsApp shortly to arrange this.</strong></p>
+                <p>Welcome to the team!</p>
+                <br>
+                <p>Best regards,<br>Elite Arrows League Team</p>
+              </div>
+            `;
+          } else if (newStatus === 'rejected') {
+            subject = 'Application Update - Elite Arrows League';
+            html = `
+              <div style="font-family: sans-serif; color: #1e1b4b;">
+                <h2>Hello ${appData.fullName},</h2>
+                <p>Thank you for your interest in joining the Elite Arrows League team.</p>
+                <p>After reviewing your application, we regret to inform you that we will not be moving forward with your application at this time.</p>
+                <p>We appreciate the time you took to apply and wish you the best of luck in your future endeavors.</p>
+                <br>
+                <p>Best regards,<br>Elite Arrows League Team</p>
+              </div>
+            `;
+          }
+
+          if (subject && appData.email) {
+            await addDoc(collection(db, 'mail'), {
+              to: appData.email,
+              message: {
+                subject: subject,
+                html: html
+              }
+            });
+            window.showToast('Status updated and email sent!', 'success');
+          } else {
+            window.showToast('Status updated successfully!', 'success');
+          }
+        } catch (emailError) {
+          console.error("Error sending email:", emailError);
+          window.showToast('Status updated, but email failed to trigger.', 'warning');
+        }
+
         window.loadAdmin();
       } catch (error) {
         console.error("Error updating status:", error);
+        window.showToast('Error updating status.', 'error');
       }
     }
 

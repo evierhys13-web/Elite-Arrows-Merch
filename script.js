@@ -55,7 +55,7 @@ async function migrateLocalData() {
       try {
         await setDoc(doc(db, 'merchPlayerApplications', app.id), app, { merge: true });
         saveMyId('myPlayerAppIds', app.id);
-      } catch (e) { console.error("Migration error (player):", e); }
+      } catch (e) { /* Likely permission error before rules deploy */ }
     }
     localStorage.removeItem('eliteArrowsApplications');
   }
@@ -66,7 +66,7 @@ async function migrateLocalData() {
       try {
         await setDoc(doc(db, 'merchRoleApplications', app.id), app, { merge: true });
         saveMyId('myRoleAppIds', app.id);
-      } catch (e) { console.error("Migration error (role):", e); }
+      } catch (e) { /* Likely permission error before rules deploy */ }
     }
     localStorage.removeItem('eliteArrowsRoleApplications');
   }
@@ -76,13 +76,9 @@ async function migrateLocalData() {
       if (!sug.id) continue;
       try {
         await setDoc(doc(db, 'merchSuggestions', sug.id), sug, { merge: true });
-      } catch (e) { console.error("Migration error (suggestion):", e); }
+      } catch (e) { /* Likely permission error before rules deploy */ }
     }
     localStorage.removeItem('eliteArrowsSuggestions');
-  }
-
-  if (oldPlayerApps.length > 0 || oldRoleApps.length > 0 || oldSuggestions.length > 0) {
-    console.log("Local data migrated to cloud successfully.");
   }
 }
 

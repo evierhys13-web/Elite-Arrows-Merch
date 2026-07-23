@@ -176,6 +176,19 @@
       }
     }
 
+    window.deleteApplication = async function(collectionName, firestoreId) {
+      if (!confirm('Are you sure you want to permanently delete this application? This cannot be undone.')) return;
+
+      try {
+        await deleteDoc(doc(db, collectionName, firestoreId));
+        window.showToast('Application deleted successfully!', 'success');
+        window.loadAdmin();
+      } catch (error) {
+        console.error("Error deleting application:", error);
+        window.showToast('Error deleting: ' + error.message, 'error');
+      }
+    }
+
     function escapeHtml(str) {
       var div = document.createElement('div');
       div.textContent = str;
@@ -261,7 +274,8 @@
                   ? '<button class="btn-approve" onclick="updateApplicationStatus(\'merchPlayerApplications\', \'' + app.id + '\', \'approved\')">Approve</button>' +
                     '<button class="btn-approve" style="background: var(--accent-primary);" onclick="updateApplicationStatus(\'merchPlayerApplications\', \'' + app.id + '\', \'onboarding_complete\')">Onboarding Complete</button>' +
                     '<button class="btn-reject" onclick="updateApplicationStatus(\'merchPlayerApplications\', \'' + app.id + '\', \'rejected\')">Reject</button>'
-                  : '<button class="btn-reject" style="background: var(--text-muted); color: white;" onclick="updateApplicationStatus(\'merchPlayerApplications\', \'' + app.id + '\', \'pending\')">Reset to Pending</button>'
+                  : '<button class="btn-reject" style="background: var(--text-muted); color: white;" onclick="updateApplicationStatus(\'merchPlayerApplications\', \'' + app.id + '\', \'pending\')">Reset to Pending</button>' +
+                    '<button class="btn-reject" style="background: #333; color: #ff4d4d; border: 1px solid #ff4d4d; margin-top: 8px;" onclick="deleteApplication(\'merchPlayerApplications\', \'' + app.firestoreId + '\')">Delete Application</button>'
                 ) +
               '</div>' +
             '</div>';
@@ -319,7 +333,8 @@
                 (app.status === 'pending'
                   ? '<button class="btn-approve" onclick="updateApplicationStatus(\'merchRoleApplications\', \'' + app.id + '\', \'approved\')">Approve</button>' +
                     '<button class="btn-reject" onclick="updateApplicationStatus(\'merchRoleApplications\', \'' + app.id + '\', \'rejected\')">Reject</button>'
-                  : '<button class="btn-reject" style="background: var(--text-muted); color: white;" onclick="updateApplicationStatus(\'merchRoleApplications\', \'' + app.id + '\', \'pending\')">Reset to Pending</button>'
+                  : '<button class="btn-reject" style="background: var(--text-muted); color: white;" onclick="updateApplicationStatus(\'merchRoleApplications\', \'' + app.id + '\', \'pending\')">Reset to Pending</button>' +
+                    '<button class="btn-reject" style="background: #333; color: #ff4d4d; border: 1px solid #ff4d4d; margin-top: 8px;" onclick="deleteApplication(\'merchRoleApplications\', \'' + app.firestoreId + '\')">Delete Application</button>'
                 ) +
               '</div>' +
             '</div>';

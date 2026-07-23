@@ -42,6 +42,89 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+// ---- Site Notification Modal ----
+
+function injectStatusModal() {
+  if (document.getElementById('statusUpdateModal')) return;
+
+  const modalHtml = `
+    <div id="statusUpdateModal" class="modal-overlay">
+      <div class="modal-card animate-slide-up">
+        <div id="modalIcon" class="modal-icon"></div>
+        <h2 id="modalTitle" class="modal-title"></h2>
+        <div id="modalText" class="modal-text"></div>
+        <button class="btn btn-primary modal-btn" id="closeStatusModal">Continue to Site</button>
+      </div>
+    </div>
+  `;
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+  document.getElementById('closeStatusModal').addEventListener('click', () => {
+    document.getElementById('statusUpdateModal').classList.remove('show');
+  });
+}
+
+async function checkForStatusUpdates() {
+  const playerIds = getMyIds('myPlayerAppIds');
+  const roleIds = getMyIds('myRoleAppIds');
+
+  if (playerIds.length === 0 && roleIds.length === 0) return;
+
+  injectStatusModal();
+
+  const allIds = [
+    ...playerIds.map(id => ({ id, collection: 'merchPlayerApplications', type: 'Player' })),
+    ...roleIds.map(id => ({ id, collection: 'merchRoleApplications', type: 'Role' }))
+  ];
+
+  for (const item of allIds) {
+    try {
+      const q = query(collection(db, item.collection), where('id', '==', item.id));
+      const snapshot = await getDocs(q);
+
+      if (!snapshot.empty) {
+        const app = snapshot.docs[0].data();
+        const lastSeen = localStorage.getItem(`lastSeenStatus_${item.id}`);
+
+        // If status changed and is not pending
+        if (app.status !== 'pending' && app.status !== lastSeen) {
+          showStatusNotification(app, item.type);
+          localStorage.setItem(`lastSeenStatus_${item.id}`, app.status);
+          break; // Show one at a time
+        }
+      }
+    } catch (e) {
+      console.error("Error checking status:", e);
+    }
+  }
+}
+
+function showStatusNotification(app, type) {
+  const modal = document.getElementById('statusUpdateModal');
+  const icon = document.getElementById('modalIcon');
+  const title = document.getElementById('modalTitle');
+  const text = document.getElementById('modalText');
+
+  const isApproved = app.status === 'approved' || app.status === 'onboarding_complete';
+  const isRejected = app.status === 'rejected';
+
+  if (isApproved) {
+    icon.className = 'modal-icon success';
+    icon.innerHTML = '🎉';
+    title.textContent = 'Application Approved!';
+    text.innerHTML = `Congratulations ${escapeHtml(app.fullName)}!<br><br>Your application for <strong>${type}</strong> has been approved. We'll be contacting you shortly to arrange a quick 5-10 minute interview.`;
+  } else if (isRejected) {
+    icon.className = 'modal-icon error';
+    icon.innerHTML = '✉️';
+    title.textContent = 'Application Update';
+    text.innerHTML = `Hello ${escapeHtml(app.fullName)},<br><br>Thank you for applying for a <strong>${type}</strong> position. Unfortunately, we aren't moving forward with your application at this time. We wish you the best of luck!`;
+  } else {
+    return;
+  }
+
+  modal.classList.add('show');
+}
+
 // ---- Data Fetching & Syncing ----
 
 async function migrateLocalData() {
@@ -349,6 +432,7 @@ async function voteSuggestion(id) {
 document.addEventListener('DOMContentLoaded', async () => {
   setupMobileMenu();
   await migrateLocalData();
+  await checkForStatusUpdates();
 
   // Player Application Form
   const form = document.getElementById('applicationForm');

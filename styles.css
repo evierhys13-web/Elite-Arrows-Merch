@@ -999,6 +999,86 @@ select.form-input {
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.85);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  padding: 20px;
+}
+
+.modal-overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-card {
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+  border: 1px solid rgba(129, 140, 248, 0.3);
+  border-radius: 24px;
+  width: 100%;
+  max-width: 500px;
+  padding: 40px;
+  text-align: center;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  transform: translateY(20px);
+  transition: transform 0.3s ease;
+}
+
+.modal-overlay.show .modal-card {
+  transform: translateY(0);
+}
+
+.modal-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+  font-size: 2.5rem;
+}
+
+.modal-icon.success {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 2px solid rgba(16, 185, 129, 0.3);
+}
+
+.modal-icon.error {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 2px solid rgba(239, 68, 68, 0.3);
+}
+
+.modal-title {
+  font-size: 1.75rem;
+  font-weight: 900;
+  margin-bottom: 16px;
+  color: #fff;
+}
+
+.modal-text {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin-bottom: 32px;
+}
+
+.modal-btn {
+  width: 100%;
+}
+
 /* Responsive */
 @media (max-width: 1100px) {
   .mobile-header {

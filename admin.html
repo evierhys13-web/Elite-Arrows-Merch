@@ -163,60 +163,8 @@
           return;
         }
 
-        const appData = docRef.data();
         await updateDoc(doc(db, collectionName, docRef.id), { status: newStatus });
-
-        // Trigger Email Notification
-        try {
-          let subject = '';
-          let html = '';
-
-          if (newStatus === 'approved') {
-            subject = 'Application Approved - Elite Arrows League';
-            html = `
-              <div style="font-family: sans-serif; color: #1e1b4b; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
-                <h2 style="color: #818cf8;">Congratulations, ${appData.fullName}!</h2>
-                <p>Your application for the position of <strong>${positionLabels[appData.position] || appData.position || 'League Role'}</strong> has been approved.</p>
-                <p>The next step is a short interview (5-10 minutes) to discuss the role and expectations.</p>
-                <p style="background: #f0fdf4; padding: 15px; border-radius: 8px; border-left: 4px solid #22c55e;">
-                  <strong>An admin will contact you via WhatsApp shortly to arrange this.</strong>
-                </p>
-                <p>Welcome to the team!</p>
-                <br>
-                <p style="color: #64748b; font-size: 0.9rem;">Best regards,<br>Elite Arrows League Team</p>
-              </div>
-            `;
-          } else if (newStatus === 'rejected') {
-            subject = 'Application Update - Elite Arrows League';
-            html = `
-              <div style="font-family: sans-serif; color: #1e1b4b; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
-                <h2>Hello ${appData.fullName},</h2>
-                <p>Thank you for your interest in joining the Elite Arrows League team.</p>
-                <p>After reviewing your application, we regret to inform you that we will not be moving forward with your application at this time.</p>
-                <p>We appreciate the time you took to apply and wish you the best of luck in your future endeavors.</p>
-                <br>
-                <p style="color: #64748b; font-size: 0.9rem;">Best regards,<br>Elite Arrows League Team</p>
-              </div>
-            `;
-          }
-
-          if (subject && appData.email) {
-            await addDoc(collection(db, 'mail'), {
-              to: appData.email,
-              message: {
-                subject: subject,
-                html: html
-              }
-            });
-            window.showToast('Status updated and email sent!', 'success');
-          } else {
-            window.showToast('Status updated successfully!', 'success');
-          }
-        } catch (emailError) {
-          console.error("Error sending email:", emailError);
-          window.showToast('Status updated, but email failed to trigger: ' + emailError.message, 'warning');
-        }
-
+        window.showToast('Status updated successfully!', 'success');
         window.loadAdmin();
       } catch (error) {
         console.error("Error updating status:", error);

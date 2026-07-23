@@ -304,13 +304,14 @@
                 '</div>' +
                 '<div class="why-join">' + escapeHtml(app.whyJoin) + '</div>' +
               '</div>' +
-              (app.status === 'pending'
-                ? '<div class="app-admin-actions">' +
-                    '<button class="btn-approve" onclick="updateApplicationStatus(\'merchPlayerApplications\', \'' + app.id + '\', \'approved\')">Approve</button>' +
+              '<div class="app-admin-actions">' +
+                (app.status === 'pending'
+                  ? '<button class="btn-approve" onclick="updateApplicationStatus(\'merchPlayerApplications\', \'' + app.id + '\', \'approved\')">Approve</button>' +
                     '<button class="btn-approve" style="background: var(--accent-primary);" onclick="updateApplicationStatus(\'merchPlayerApplications\', \'' + app.id + '\', \'onboarding_complete\')">Onboarding Complete</button>' +
-                    '<button class="btn-reject" onclick="updateApplicationStatus(\'merchPlayerApplications\', \'' + app.id + '\', \'rejected\')">Reject</button>' +
-                  '</div>'
-                : '') +
+                    '<button class="btn-reject" onclick="updateApplicationStatus(\'merchPlayerApplications\', \'' + app.id + '\', \'rejected\')">Reject</button>'
+                  : '<button class="btn-reject" style="background: var(--text-muted); color: white;" onclick="updateApplicationStatus(\'merchPlayerApplications\', \'' + app.id + '\', \'pending\')">Reset to Pending</button>'
+                ) +
+              '</div>' +
             '</div>';
           }).join('');
         }
@@ -362,12 +363,13 @@
                 '</div>' +
                 '<div class="why-join">' + escapeHtml(app.experience) + '</div>' +
               '</div>' +
-              (app.status === 'pending'
-                ? '<div class="app-admin-actions">' +
-                    '<button class="btn-approve" onclick="updateApplicationStatus(\'merchRoleApplications\', \'' + app.id + '\', \'approved\')">Approve</button>' +
-                    '<button class="btn-reject" onclick="updateApplicationStatus(\'merchRoleApplications\', \'' + app.id + '\', \'rejected\')">Reject</button>' +
-                  '</div>'
-                : '') +
+              '<div class="app-admin-actions">' +
+                (app.status === 'pending'
+                  ? '<button class="btn-approve" onclick="updateApplicationStatus(\'merchRoleApplications\', \'' + app.id + '\', \'approved\')">Approve</button>' +
+                    '<button class="btn-reject" onclick="updateApplicationStatus(\'merchRoleApplications\', \'' + app.id + '\', \'rejected\')">Reject</button>'
+                  : '<button class="btn-reject" style="background: var(--text-muted); color: white;" onclick="updateApplicationStatus(\'merchRoleApplications\', \'' + app.id + '\', \'pending\')">Reset to Pending</button>'
+                ) +
+              '</div>' +
             '</div>';
           }).join('');
         }

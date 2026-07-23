@@ -28,7 +28,7 @@
       color: var(--text-secondary);
       margin-bottom: 24px;
     }
-    .admin-auth-gate input[type="email"] {
+    .admin-auth-gate input {
       max-width: 400px;
       width: 100%;
     }
@@ -45,13 +45,14 @@
     <main style="display: flex; align-items: center; justify-content: center; width: 100%; min-height: 100vh;">
       <div class="admin-auth-gate">
         <h2>Admin <span style="background: linear-gradient(to right, var(--accent-primary), var(--accent-cyan)); -webkit-text-fill-color: transparent; -webkit-background-clip: text; background-clip: text;">Access</span></h2>
-        <p>Enter the authorised admin email to access the panel.</p>
-        <input type="email" id="adminEmailInput" class="form-input" placeholder="admin@example.com" style="max-width: 400px;">
+        <p>Log in with your Elite Arrows admin credentials to manage applications.</p>
+        <input type="email" id="adminEmailInput" class="form-input" placeholder="Email Address" style="margin-bottom: 12px;">
+        <input type="password" id="adminPasswordInput" class="form-input" placeholder="Password">
         <label class="checkbox-label" style="margin-top: 16px; justify-content: center;">
           <input type="checkbox" id="adminRemember">
           <span>Remember me</span>
         </label>
-        <button class="btn btn-primary" style="margin-top: 16px;" onclick="verifyAdmin()">Verify</button>
+        <button class="btn btn-primary" id="loginBtn" style="margin-top: 16px;" onclick="verifyAdmin()">Login to Dashboard</button>
         <div id="adminAuthError" class="admin-auth-error"></div>
       </div>
     </main>
@@ -134,7 +135,7 @@
   <div class="toast" id="toast"></div>
 
   <script type="module">
-    import { db, collection, doc, setDoc, getDocs, query, orderBy, onSnapshot, updateDoc, deleteDoc } from "./firebase-config.js";
+    import { db, auth, collection, doc, setDoc, getDocs, query, orderBy, onSnapshot, updateDoc, deleteDoc, signInWithEmailAndPassword, onAuthStateChanged, signOut, addDoc } from "./firebase-config.js";
 
     window.showToast = function(message, type) {
       const toast = document.getElementById('toast');
@@ -173,26 +174,28 @@
           if (newStatus === 'approved') {
             subject = 'Application Approved - Elite Arrows League';
             html = `
-              <div style="font-family: sans-serif; color: #1e1b4b;">
-                <h2>Congratulations, ${appData.fullName}!</h2>
-                <p>Your application for the position of <strong>${appData.position || 'Player'}</strong> has been approved.</p>
+              <div style="font-family: sans-serif; color: #1e1b4b; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
+                <h2 style="color: #818cf8;">Congratulations, ${appData.fullName}!</h2>
+                <p>Your application for the position of <strong>${positionLabels[appData.position] || appData.position || 'League Role'}</strong> has been approved.</p>
                 <p>The next step is a short interview (5-10 minutes) to discuss the role and expectations.</p>
-                <p><strong>An admin will contact you via WhatsApp shortly to arrange this.</strong></p>
+                <p style="background: #f0fdf4; padding: 15px; border-radius: 8px; border-left: 4px solid #22c55e;">
+                  <strong>An admin will contact you via WhatsApp shortly to arrange this.</strong>
+                </p>
                 <p>Welcome to the team!</p>
                 <br>
-                <p>Best regards,<br>Elite Arrows League Team</p>
+                <p style="color: #64748b; font-size: 0.9rem;">Best regards,<br>Elite Arrows League Team</p>
               </div>
             `;
           } else if (newStatus === 'rejected') {
             subject = 'Application Update - Elite Arrows League';
             html = `
-              <div style="font-family: sans-serif; color: #1e1b4b;">
+              <div style="font-family: sans-serif; color: #1e1b4b; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
                 <h2>Hello ${appData.fullName},</h2>
                 <p>Thank you for your interest in joining the Elite Arrows League team.</p>
                 <p>After reviewing your application, we regret to inform you that we will not be moving forward with your application at this time.</p>
                 <p>We appreciate the time you took to apply and wish you the best of luck in your future endeavors.</p>
                 <br>
-                <p>Best regards,<br>Elite Arrows League Team</p>
+                <p style="color: #64748b; font-size: 0.9rem;">Best regards,<br>Elite Arrows League Team</p>
               </div>
             `;
           }
@@ -211,13 +214,13 @@
           }
         } catch (emailError) {
           console.error("Error sending email:", emailError);
-          window.showToast('Status updated, but email failed to trigger.', 'warning');
+          window.showToast('Status updated, but email failed to trigger: ' + emailError.message, 'warning');
         }
 
         window.loadAdmin();
       } catch (error) {
         console.error("Error updating status:", error);
-        window.showToast('Error updating status.', 'error');
+        window.showToast('Error updating status: ' + error.message, 'error');
       }
     }
 
@@ -229,9 +232,14 @@
 
     window.updateSuggestionStatus = async function(id, newStatus) {
       try {
-        await updateDoc(doc(db, 'merchSuggestions', id), { status: newStatus });
-        window.showToast('Suggestion updated successfully!', 'success');
-        window.loadAdmin();
+        const snapshot = await getDocs(query(collection(db, 'merchSuggestions')));
+        const docRef = snapshot.docs.find(d => d.data().id === id);
+
+        if (docRef) {
+          await updateDoc(doc(db, 'merchSuggestions', docRef.id), { status: newStatus });
+          window.showToast('Suggestion updated!', 'success');
+          window.loadAdmin();
+        }
       } catch (error) {
         console.error("Error updating suggestion:", error);
       }
@@ -263,9 +271,9 @@
         const roleSnap = await getDocs(query(collection(db, 'merchRoleApplications'), orderBy('submittedAt', 'desc')));
         const sugSnap = await getDocs(query(collection(db, 'merchSuggestions'), orderBy('submittedAt', 'desc')));
 
-        const playerApps = playerSnap.docs.map(d => d.data());
-        const roleApps = roleSnap.docs.map(d => d.data());
-        const suggestions = sugSnap.docs.map(d => d.data());
+        const playerApps = playerSnap.docs.map(d => ({ firestoreId: d.id, ...d.data() }));
+        const roleApps = roleSnap.docs.map(d => ({ firestoreId: d.id, ...d.data() }));
+        const suggestions = sugSnap.docs.map(d => ({ firestoreId: d.id, ...d.data() }));
 
         document.getElementById('totalPlayerCount').textContent = playerApps.length;
         document.getElementById('pendingPlayerCount').textContent = playerApps.filter(function(a) { return a.status === 'pending'; }).length;
@@ -368,33 +376,52 @@
       }
     }
 
-    window.verifyAdmin = function() {
-      var email = document.getElementById('adminEmailInput').value.trim().toLowerCase();
-      if (email === 'rhyshowe2023@outlook.com') {
-        if (document.getElementById('adminRemember').checked) {
-          localStorage.setItem('eliteArrowsAdminAuth', 'true');
-        }
-        document.getElementById('adminAuthGate').style.display = 'none';
-        document.getElementById('adminPanel').style.display = 'flex';
-        window.loadAdmin();
-      } else {
-        document.getElementById('adminAuthError').textContent = 'Unauthorised email. Access denied.';
+    window.verifyAdmin = async function() {
+      const email = document.getElementById('adminEmailInput').value.trim();
+      const password = document.getElementById('adminPasswordInput').value;
+      const btn = document.getElementById('loginBtn');
+      const errorDiv = document.getElementById('adminAuthError');
+
+      if (!email || !password) {
+        errorDiv.textContent = 'Please enter both email and password.';
+        return;
+      }
+
+      try {
+        btn.disabled = true;
+        btn.textContent = 'Authenticating...';
+        errorDiv.textContent = '';
+
+        await signInWithEmailAndPassword(auth, email, password);
+      } catch (error) {
+        console.error("Login error:", error);
+        errorDiv.textContent = 'Login failed: ' + error.message;
+        btn.disabled = false;
+        btn.textContent = 'Login to Dashboard';
       }
     }
 
-    function checkPersistedAuth() {
-      if (localStorage.getItem('eliteArrowsAdminAuth') === 'true') {
-        document.getElementById('adminAuthGate').style.display = 'none';
-        document.getElementById('adminPanel').style.display = 'flex';
-        window.loadAdmin();
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        const ADMIN_EMAILS = ['rhyshowe2023@outlook.com', 'dhineberry@yahoo.com', 'test@elitearrows.co.uk'];
+        if (ADMIN_EMAILS.includes(user.email.toLowerCase())) {
+          document.getElementById('adminAuthGate').style.display = 'none';
+          document.getElementById('adminPanel').style.display = 'flex';
+          window.loadAdmin();
+        } else {
+          signOut(auth);
+          document.getElementById('adminAuthError').textContent = 'Access denied. You do not have admin privileges.';
+        }
+      } else {
+        document.getElementById('adminAuthGate').style.display = 'flex';
+        document.getElementById('adminPanel').style.display = 'none';
       }
-    }
+    });
 
     document.addEventListener('DOMContentLoaded', function() {
-      document.getElementById('adminEmailInput').addEventListener('keydown', function(e) {
+      document.getElementById('adminPasswordInput').addEventListener('keydown', function(e) {
         if (e.key === 'Enter') window.verifyAdmin();
       });
-      checkPersistedAuth();
     });
   </script>
 </body>

@@ -31,11 +31,16 @@
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           Job / Role Applications
         </a>
-        <a href="suggestions.html" class="nav-item">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
-          Suggestions
+        <a href="admin.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3m0 12l-4-4m4 4l4-4M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17"/></svg>
+          Admin
         </a>
       </nav>
+
+      <!-- Auth Sidebar Footer -->
+      <div id="sidebarAuth" class="sidebar-footer">
+        <!-- Will be populated by JS -->
+      </div>
     </aside>
 
     <!-- Mobile Header -->
@@ -227,8 +232,9 @@
                 <input type="text" id="roleFullName" class="form-input" placeholder="e.g. John Smith" required>
               </div>
               <div class="form-group">
-                <label for="roleEmail">Email Address</label>
-                <input type="email" id="roleEmail" class="form-input" placeholder="e.g. john@example.com" required>
+                <label>Email Address</label>
+                <input type="email" id="roleDisplayEmail" class="form-input" placeholder="Login to see email" disabled>
+                <small style="color: var(--text-muted); margin-top: 4px;">Linked to your account email</small>
               </div>
             </div>
             <div class="form-group">
@@ -274,6 +280,25 @@
       <h2 class="section-title">My Role <span>Applications</span></h2>
       <div id="roleApplicationsContainer" class="applications-list"></div>
     </main>
+  </div>
+
+  <!-- Auth Modal -->
+  <div id="authModal" class="modal-overlay">
+    <div class="modal-card animate-slide-up" style="max-width: 400px;">
+      <h2 class="modal-title">Member <span>Login</span></h2>
+      <p class="modal-text">Login with your Elite Arrows account to apply or check status.</p>
+
+      <div class="application-form">
+        <div class="form-group">
+          <input type="email" id="loginEmail" class="form-input" placeholder="Email Address">
+        </div>
+        <div class="form-group">
+          <input type="password" id="loginPassword" class="form-input" placeholder="Password">
+        </div>
+        <button class="btn btn-primary btn-submit" id="doLogin">Login</button>
+        <button class="btn btn-secondary modal-btn" id="closeAuthModal" style="margin-top: 12px;">Cancel</button>
+      </div>
+    </div>
   </div>
 
   <!-- Toast -->

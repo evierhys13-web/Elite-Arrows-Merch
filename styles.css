@@ -106,6 +106,43 @@ img {
   overflow-y: auto;
 }
 
+.sidebar-footer {
+  border-top: 1px solid var(--border);
+  padding: 20px;
+}
+
+.auth-user-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--border-radius-md);
+  margin-bottom: 12px;
+}
+
+.auth-user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.auth-user-email {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.auth-status-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--success);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--success);
+}
+
 .nav-item {
   color: var(--text-secondary);
   border-radius: var(--border-radius-md);

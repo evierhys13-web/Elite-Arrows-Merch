@@ -1,6 +1,127 @@
-import { db, collection, doc, setDoc, getDocs, query, orderBy, onSnapshot, updateDoc, addDoc } from "./firebase-config.js";
+import { db, auth, collection, doc, setDoc, getDocs, query, where, orderBy, onSnapshot, updateDoc, addDoc, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "./firebase-config.js";
 
 // ---- Utility Functions ----
+function showToast(message, type) {
+  const toast = document.getElementById('toast');
+  if (!toast) return;
+  toast.className = 'toast ' + (type || '');
+  toast.innerHTML = `<span class="toast-icon">${type === 'success' ? '✓' : 'ℹ'}</span> ${message}`;
+  toast.classList.add('show');
+  clearTimeout(toast._timeout);
+  toast._timeout = setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// ---- Auth Logic ----
+
+let currentUser = null;
+
+function updateAuthUI(user) {
+  currentUser = user;
+  const sidebarAuth = document.getElementById('sidebarAuth');
+  const displayEmail = document.getElementById('displayEmail');
+  const roleDisplayEmail = document.getElementById('roleDisplayEmail');
+  const heroActions = document.getElementById('heroActions');
+
+  if (sidebarAuth) {
+    if (user) {
+      sidebarAuth.innerHTML = `
+        <div class="auth-user-card">
+          <div class="auth-status-dot"></div>
+          <div class="auth-user-info">
+            <span class="auth-user-email">${user.email}</span>
+          </div>
+        </div>
+        <button class="btn btn-secondary btn-sm" style="width: 100%;" id="logoutBtn">Logout</button>
+      `;
+      document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
+    } else {
+      sidebarAuth.innerHTML = `
+        <button class="btn btn-primary btn-sm" style="width: 100%;" id="openLoginBtn">Login / Sign In</button>
+      `;
+      const openBtn = document.getElementById('openLoginBtn');
+      if (openBtn) {
+        openBtn.addEventListener('click', () => {
+          document.getElementById('authModal').classList.add('show');
+        });
+      }
+    }
+  }
+
+  if (heroActions) {
+    if (user) {
+      heroActions.innerHTML = `
+        <button class="btn btn-primary" id="checkStatusBtn">Check Application Status</button>
+        <a href="https://chat.whatsapp.com/GNaYyJDxzMADbA1ARI1kne" target="_blank" rel="noopener noreferrer" class="btn btn-green">WhatsApp Community</a>
+      `;
+      document.getElementById('checkStatusBtn').addEventListener('click', checkForStatusUpdates);
+    } else {
+      heroActions.innerHTML = `
+        <button class="btn btn-primary" id="heroLoginBtn">Login to Check Status</button>
+        <a href="https://chat.whatsapp.com/GNaYyJDxzMADbA1ARI1kne" target="_blank" rel="noopener noreferrer" class="btn btn-green">WhatsApp Community</a>
+      `;
+      const hLogin = document.getElementById('heroLoginBtn');
+      if (hLogin) {
+        hLogin.addEventListener('click', () => {
+          document.getElementById('authModal').classList.add('show');
+        });
+      }
+    }
+  }
+
+  if (displayEmail) displayEmail.value = user ? user.email : '';
+  if (roleDisplayEmail) roleDisplayEmail.value = user ? user.email : '';
+
+  // Re-check status updates and refresh data when user changes
+  if (user) {
+    checkForStatusUpdates();
+    refreshMyData();
+  }
+}
+
+async function refreshMyData() {
+  const playerContainer = document.getElementById('applicationsContainer');
+  const roleContainer = document.getElementById('roleApplicationsContainer');
+
+  if (playerContainer) {
+    const apps = await fetchApplications();
+    renderApplications(playerContainer, apps);
+  }
+  if (roleContainer) {
+    const apps = await fetchRoleApplications();
+    renderRoleApplications(roleContainer, apps);
+  }
+}
+
+onAuthStateChanged(auth, (user) => {
+  updateAuthUI(user);
+});
+
+async function handleLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPassword').value;
+  const btn = document.getElementById('doLogin');
+
+  if (!email || !pass) {
+    showToast('Please enter email and password', 'error');
+    return;
+  }
+
+  try {
+    btn.disabled = true;
+    btn.textContent = 'Logging in...';
+    await signInWithEmailAndPassword(auth, email, pass);
+    document.getElementById('authModal').classList.remove('show');
+    showToast('Logged in successfully!', 'success');
+  } catch (error) {
+    console.error("Login error:", error);
+    showToast('Login failed: ' + error.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Login';
+  }
+}
+
+// ---- Site Notification Modal ----
 function showToast(message, type) {
   const toast = document.getElementById('toast');
   if (!toast) return;
@@ -65,34 +186,29 @@ function injectStatusModal() {
 }
 
 async function checkForStatusUpdates() {
-  const playerIds = getMyIds('myPlayerAppIds');
-  const roleIds = getMyIds('myRoleAppIds');
-
-  if (playerIds.length === 0 && roleIds.length === 0) return;
+  if (!currentUser) return;
 
   injectStatusModal();
 
-  const allIds = [
-    ...playerIds.map(id => ({ id, collection: 'merchPlayerApplications', type: 'Player' })),
-    ...roleIds.map(id => ({ id, collection: 'merchRoleApplications', type: 'Role' }))
+  const categories = [
+    { collection: 'merchPlayerApplications', type: 'Player' },
+    { collection: 'merchRoleApplications', type: 'Role' }
   ];
 
-  for (const item of allIds) {
+  for (const cat of categories) {
     try {
-      const q = query(collection(db, item.collection), where('id', '==', item.id));
+      const q = query(collection(db, cat.collection), where('email', '==', currentUser.email));
       const snapshot = await getDocs(q);
 
-      if (!snapshot.empty) {
-        const app = snapshot.docs[0].data();
-        const lastSeen = localStorage.getItem(`lastSeenStatus_${item.id}`);
+      snapshot.forEach(doc => {
+        const app = doc.data();
+        const lastSeen = localStorage.getItem(`lastSeenStatus_${app.id}`);
 
-        // If status changed and is not pending
         if (app.status !== 'pending' && app.status !== lastSeen) {
-          showStatusNotification(app, item.type);
-          localStorage.setItem(`lastSeenStatus_${item.id}`, app.status);
-          break; // Show one at a time
+          showStatusNotification(app, cat.type);
+          localStorage.setItem(`lastSeenStatus_${app.id}`, app.status);
         }
-      }
+      });
     } catch (e) {
       console.error("Error checking status:", e);
     }
@@ -184,14 +300,16 @@ function saveMyId(key, id) {
 async function fetchApplications() {
   try {
     const myIds = getMyIds('myPlayerAppIds');
-    if (myIds.length === 0) return [];
+    const userEmail = currentUser ? currentUser.email : null;
+
+    if (myIds.length === 0 && !userEmail) return [];
 
     const q = query(collection(db, 'merchPlayerApplications'), orderBy('submittedAt', 'desc'));
     const snapshot = await getDocs(q);
-    // Filter by my IDs to maintain privacy on the public page
+
     return snapshot.docs
       .map(doc => ({ firestoreId: doc.id, ...doc.data() }))
-      .filter(app => myIds.includes(app.id));
+      .filter(app => myIds.includes(app.id) || (userEmail && app.email === userEmail));
   } catch (error) {
     console.error("Error fetching applications:", error);
     return [];
@@ -201,13 +319,15 @@ async function fetchApplications() {
 async function fetchRoleApplications() {
   try {
     const myIds = getMyIds('myRoleAppIds');
-    if (myIds.length === 0) return [];
+    const userEmail = currentUser ? currentUser.email : null;
+
+    if (myIds.length === 0 && !userEmail) return [];
 
     const q = query(collection(db, 'merchRoleApplications'), orderBy('submittedAt', 'desc'));
     const snapshot = await getDocs(q);
     return snapshot.docs
       .map(doc => ({ firestoreId: doc.id, ...doc.data() }))
-      .filter(app => myIds.includes(app.id));
+      .filter(app => myIds.includes(app.id) || (userEmail && app.email === userEmail));
   } catch (error) {
     console.error("Error fetching role applications:", error);
     return [];
@@ -434,16 +554,36 @@ document.addEventListener('DOMContentLoaded', async () => {
   await migrateLocalData();
   await checkForStatusUpdates();
 
+  // Auth modal listeners
+  const closeAuthBtn = document.getElementById('closeAuthModal');
+  if (closeAuthBtn) {
+    closeAuthBtn.addEventListener('click', () => {
+      document.getElementById('authModal').classList.remove('show');
+    });
+  }
+
+  const loginBtn = document.getElementById('doLogin');
+  if (loginBtn) {
+    loginBtn.addEventListener('click', handleLogin);
+  }
+
   // Player Application Form
   const form = document.getElementById('applicationForm');
   if (form) {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
+      if (!currentUser) {
+        showToast('Please login to submit an application', 'error');
+        document.getElementById('authModal').classList.add('show');
+        return;
+      }
+
       const application = {
         id: 'EA-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substr(2, 4).toUpperCase(),
         fullName: document.getElementById('fullName').value.trim(),
-        email: document.getElementById('email').value.trim(),
+        email: currentUser.email, // Use logged in email
+        userId: currentUser.uid, // Add UID for linking
         age: parseInt(document.getElementById('age').value),
         location: document.getElementById('location').value.trim(),
         dartcounter: document.getElementById('dartcounter').value.trim(),
@@ -480,10 +620,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     roleForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
+      if (!currentUser) {
+        showToast('Please login to submit an application', 'error');
+        document.getElementById('authModal').classList.add('show');
+        return;
+      }
+
       const application = {
         id: 'EA-ROLE-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substr(2, 4).toUpperCase(),
         fullName: document.getElementById('roleFullName').value.trim(),
-        email: document.getElementById('roleEmail').value.trim(),
+        email: currentUser.email, // Use logged in email
+        userId: currentUser.uid,
         position: document.getElementById('rolePosition').value,
         experience: document.getElementById('roleExperience').value.trim(),
         availability: document.getElementById('roleAvailability').value,

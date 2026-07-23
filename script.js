@@ -18,9 +18,64 @@ let currentUser = null;
 function updateAuthUI(user) {
   currentUser = user;
   const sidebarAuth = document.getElementById('sidebarAuth');
+  const navLogin = document.getElementById('navLoginContainer');
+  const mobileNavLogin = document.getElementById('mobileNavLoginContainer');
   const displayEmail = document.getElementById('displayEmail');
   const roleDisplayEmail = document.getElementById('roleDisplayEmail');
   const heroActions = document.getElementById('heroActions');
+
+  const loginHtml = `
+    <button class="nav-item" style="background: none; border: none; width: 100%; cursor: pointer;" id="openLoginBtn">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      Login to Member Account
+    </button>
+  `;
+
+  const logoutHtml = `
+    <button class="nav-item" style="background: none; border: none; width: 100%; cursor: pointer; color: var(--error);" id="logoutBtn">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Logout
+    </button>
+  `;
+
+  if (navLogin) {
+    navLogin.innerHTML = user ? logoutHtml : loginHtml;
+    const btn = user ? document.getElementById('logoutBtn') : document.getElementById('openLoginBtn');
+    if (btn) {
+      btn.addEventListener('click', () => {
+        if (user) signOut(auth);
+        else document.getElementById('authModal').classList.add('show');
+      });
+    }
+  }
+
+  if (mobileNavLogin) {
+    mobileNavLogin.innerHTML = user ? `
+      <div class="auth-user-card" style="margin-bottom: 8px;">
+        <div class="auth-status-dot"></div>
+        <div class="auth-user-info"><span class="auth-user-email">${user.email}</span></div>
+      </div>
+      <button class="btn btn-secondary btn-sm" style="width: 100%;" id="mobileLogoutBtn">Logout</button>
+    ` : `
+      <button class="btn btn-primary btn-sm" style="width: 100%;" id="mobileLoginBtn">Login to Member Account</button>
+    `;
+    const mBtn = user ? document.getElementById('mobileLogoutBtn') : document.getElementById('mobileLoginBtn');
+    if (mBtn) {
+      mBtn.addEventListener('click', () => {
+        if (user) signOut(auth);
+        else {
+          document.getElementById('authModal').classList.add('show');
+          // Close mobile menu if open
+          const overlay = document.getElementById('mobileOverlay');
+          const nav = document.getElementById('mobileNav');
+          if (overlay && nav) {
+            overlay.classList.remove('open');
+            nav.classList.remove('open');
+          }
+        }
+      });
+    }
+  }
 
   if (sidebarAuth) {
     if (user) {
@@ -28,19 +83,19 @@ function updateAuthUI(user) {
         <div class="auth-user-card">
           <div class="auth-status-dot"></div>
           <div class="auth-user-info">
+            <span class="auth-user-email" style="font-weight: 600;">Member Active</span>
             <span class="auth-user-email">${user.email}</span>
           </div>
         </div>
-        <button class="btn btn-secondary btn-sm" style="width: 100%;" id="logoutBtn">Logout</button>
       `;
-      document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
     } else {
       sidebarAuth.innerHTML = `
-        <button class="btn btn-primary btn-sm" style="width: 100%;" id="openLoginBtn">Login / Sign In</button>
+        <p style="font-size: 0.75rem; color: var(--text-muted); text-align: center; margin-bottom: 8px;">Log in to manage applications</p>
+        <button class="btn btn-primary btn-sm" style="width: 100%;" id="sidebarLoginBtn">Login</button>
       `;
-      const openBtn = document.getElementById('openLoginBtn');
-      if (openBtn) {
-        openBtn.addEventListener('click', () => {
+      const sLogin = document.getElementById('sidebarLoginBtn');
+      if (sLogin) {
+        sLogin.addEventListener('click', () => {
           document.getElementById('authModal').classList.add('show');
         });
       }
@@ -71,7 +126,6 @@ function updateAuthUI(user) {
   if (displayEmail) displayEmail.value = user ? user.email : '';
   if (roleDisplayEmail) roleDisplayEmail.value = user ? user.email : '';
 
-  // Re-check status updates and refresh data when user changes
   if (user) {
     checkForStatusUpdates();
     refreshMyData();

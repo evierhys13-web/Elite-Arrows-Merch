@@ -154,17 +154,9 @@
 
     window.updateApplicationStatus = async function(collectionName, id, newStatus) {
       try {
-        const q = query(collection(db, collectionName), orderBy('submittedAt', 'desc'));
-        const snapshot = await getDocs(query(collection(db, collectionName)));
-        const docRef = snapshot.docs.find(d => d.data().id === id);
-
-        if (docRef) {
-          await updateDoc(doc(db, collectionName, docRef.id), { status: newStatus });
-          const app = docRef.data();
-          var label = newStatus === 'approved' ? 'approved' : newStatus === 'onboarding_complete' ? 'onboarding complete' : 'rejected';
-          window.showToast(app.fullName + ' ' + label + '!', 'success');
-          loadAdmin();
-        }
+        await updateDoc(doc(db, collectionName, id), { status: newStatus });
+        window.showToast('Status updated successfully!', 'success');
+        window.loadAdmin();
       } catch (error) {
         console.error("Error updating status:", error);
       }
@@ -178,14 +170,9 @@
 
     window.updateSuggestionStatus = async function(id, newStatus) {
       try {
-        const snapshot = await getDocs(query(collection(db, 'merchSuggestions')));
-        const docRef = snapshot.docs.find(d => d.data().id === id);
-
-        if (docRef) {
-          await updateDoc(doc(db, 'merchSuggestions', docRef.id), { status: newStatus });
-          window.showToast('Suggestion updated to "' + suggestionStatuses[newStatus].label + '"', 'success');
-          loadAdmin();
-        }
+        await updateDoc(doc(db, 'merchSuggestions', id), { status: newStatus });
+        window.showToast('Suggestion updated successfully!', 'success');
+        window.loadAdmin();
       } catch (error) {
         console.error("Error updating suggestion:", error);
       }

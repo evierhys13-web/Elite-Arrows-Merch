@@ -44,6 +44,48 @@ function escapeHtml(str) {
 
 // ---- Data Fetching & Syncing ----
 
+async function migrateLocalData() {
+  const oldPlayerApps = JSON.parse(localStorage.getItem('eliteArrowsApplications') || '[]');
+  const oldRoleApps = JSON.parse(localStorage.getItem('eliteArrowsRoleApplications') || '[]');
+  const oldSuggestions = JSON.parse(localStorage.getItem('eliteArrowsSuggestions') || '[]');
+
+  if (oldPlayerApps.length > 0) {
+    for (const app of oldPlayerApps) {
+      if (!app.id) continue;
+      try {
+        await setDoc(doc(db, 'merchPlayerApplications', app.id), app, { merge: true });
+        saveMyId('myPlayerAppIds', app.id);
+      } catch (e) { console.error("Migration error (player):", e); }
+    }
+    localStorage.removeItem('eliteArrowsApplications');
+  }
+
+  if (oldRoleApps.length > 0) {
+    for (const app of oldRoleApps) {
+      if (!app.id) continue;
+      try {
+        await setDoc(doc(db, 'merchRoleApplications', app.id), app, { merge: true });
+        saveMyId('myRoleAppIds', app.id);
+      } catch (e) { console.error("Migration error (role):", e); }
+    }
+    localStorage.removeItem('eliteArrowsRoleApplications');
+  }
+
+  if (oldSuggestions.length > 0) {
+    for (const sug of oldSuggestions) {
+      if (!sug.id) continue;
+      try {
+        await setDoc(doc(db, 'merchSuggestions', sug.id), sug, { merge: true });
+      } catch (e) { console.error("Migration error (suggestion):", e); }
+    }
+    localStorage.removeItem('eliteArrowsSuggestions');
+  }
+
+  if (oldPlayerApps.length > 0 || oldRoleApps.length > 0 || oldSuggestions.length > 0) {
+    console.log("Local data migrated to cloud successfully.");
+  }
+}
+
 function getMyIds(key) {
   try {
     return JSON.parse(localStorage.getItem(key)) || [];
@@ -69,8 +111,8 @@ async function fetchApplications() {
     const snapshot = await getDocs(q);
     // Filter by my IDs to maintain privacy on the public page
     return snapshot.docs
-      .map(doc => ({ id: doc.id, ...doc.data() }))
-      .filter(app => myIds.includes(app.id) || myIds.includes(app.customId));
+      .map(doc => ({ firestoreId: doc.id, ...doc.data() }))
+      .filter(app => myIds.includes(app.id));
   } catch (error) {
     console.error("Error fetching applications:", error);
     return [];
@@ -85,8 +127,8 @@ async function fetchRoleApplications() {
     const q = query(collection(db, 'merchRoleApplications'), orderBy('submittedAt', 'desc'));
     const snapshot = await getDocs(q);
     return snapshot.docs
-      .map(doc => ({ id: doc.id, ...doc.data() }))
-      .filter(app => myIds.includes(app.id) || myIds.includes(app.customId));
+      .map(doc => ({ firestoreId: doc.id, ...doc.data() }))
+      .filter(app => myIds.includes(app.id));
   } catch (error) {
     console.error("Error fetching role applications:", error);
     return [];
@@ -310,6 +352,7 @@ async function voteSuggestion(id) {
 
 document.addEventListener('DOMContentLoaded', async () => {
   setupMobileMenu();
+  await migrateLocalData();
 
   // Player Application Form
   const form = document.getElementById('applicationForm');
@@ -339,7 +382,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       saveMyId('myPlayerAppIds', application.id);
 
       try {
-        await addDoc(collection(db, 'merchPlayerApplications'), application);
+        await setDoc(doc(db, 'merchPlayerApplications', application.id), application);
         showToast('Application submitted successfully!', 'success');
         form.reset();
         const apps = await fetchApplications();
@@ -373,7 +416,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       saveMyId('myRoleAppIds', application.id);
 
       try {
-        await addDoc(collection(db, 'merchRoleApplications'), application);
+        await setDoc(doc(db, 'merchRoleApplications', application.id), application);
         showToast('Role application submitted successfully!', 'success');
         roleForm.reset();
         const apps = await fetchRoleApplications();
@@ -404,7 +447,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       };
 
       try {
-        await addDoc(collection(db, 'merchSuggestions'), suggestion);
+        await setDoc(doc(db, 'merchSuggestions', suggestion.id), suggestion);
         showToast('Suggestion submitted successfully!', 'success');
         sugForm.reset();
         const suggestions = await fetchSuggestions();

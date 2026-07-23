@@ -378,18 +378,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         submittedAt: new Date().toISOString(),
       };
 
-      // Store in localStorage for "My Applications" view
-      saveMyId('myPlayerAppIds', application.id);
-
       try {
-        await setDoc(doc(db, 'merchPlayerApplications', application.id), application);
+        const docRef = await addDoc(collection(db, 'merchPlayerApplications'), application);
+        // Store the auto-generated ID in localStorage for "My Applications" view
+        saveMyId('myPlayerAppIds', docRef.id);
+
         showToast('Application submitted successfully!', 'success');
         form.reset();
         const apps = await fetchApplications();
         renderApplications(document.getElementById('applicationsContainer'), apps);
       } catch (error) {
         console.error("Error submitting application:", error);
-        showToast('Error submitting application', 'error');
+        showToast('Error: ' + error.message, 'error');
       }
     });
   }
@@ -412,18 +412,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         submittedAt: new Date().toISOString(),
       };
 
-      // Store in localStorage for "My Applications" view
-      saveMyId('myRoleAppIds', application.id);
-
       try {
-        await setDoc(doc(db, 'merchRoleApplications', application.id), application);
+        const docRef = await addDoc(collection(db, 'merchRoleApplications'), application);
+        saveMyId('myRoleAppIds', docRef.id);
+
         showToast('Role application submitted successfully!', 'success');
         roleForm.reset();
         const apps = await fetchRoleApplications();
         renderRoleApplications(document.getElementById('roleApplicationsContainer'), apps);
       } catch (error) {
         console.error("Error submitting role application:", error);
-        showToast('Error submitting application', 'error');
+        showToast('Error: ' + error.message, 'error');
       }
     });
   }
@@ -447,14 +446,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       };
 
       try {
-        await setDoc(doc(db, 'merchSuggestions', suggestion.id), suggestion);
+        await addDoc(collection(db, 'merchSuggestions'), suggestion);
         showToast('Suggestion submitted successfully!', 'success');
         sugForm.reset();
         const suggestions = await fetchSuggestions();
         renderSuggestions(document.getElementById('suggestionsContainer'), suggestions);
       } catch (error) {
         console.error("Error submitting suggestion:", error);
-        showToast('Error submitting suggestion', 'error');
+        showToast('Error: ' + error.message, 'error');
       }
     });
   }

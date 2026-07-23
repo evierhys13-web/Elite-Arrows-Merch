@@ -11,181 +11,6 @@ function showToast(message, type) {
   toast._timeout = setTimeout(() => toast.classList.remove('show'), 3000);
 }
 
-// ---- Auth Logic ----
-
-let currentUser = null;
-
-function updateAuthUI(user) {
-  currentUser = user;
-  const sidebarAuth = document.getElementById('sidebarAuth');
-  const navLogin = document.getElementById('navLoginContainer');
-  const mobileNavLogin = document.getElementById('mobileNavLoginContainer');
-  const displayEmail = document.getElementById('displayEmail');
-  const roleDisplayEmail = document.getElementById('roleDisplayEmail');
-  const heroActions = document.getElementById('heroActions');
-
-  const loginHtml = `
-    <button class="nav-item" style="background: none; border: none; width: 100%; cursor: pointer;" id="openLoginBtn">
-      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-      Login to Member Account
-    </button>
-  `;
-
-  const logoutHtml = `
-    <button class="nav-item" style="background: none; border: none; width: 100%; cursor: pointer; color: var(--error);" id="logoutBtn">
-      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-      Logout
-    </button>
-  `;
-
-  if (navLogin) {
-    navLogin.innerHTML = user ? logoutHtml : loginHtml;
-    const btn = user ? document.getElementById('logoutBtn') : document.getElementById('openLoginBtn');
-    if (btn) {
-      btn.addEventListener('click', () => {
-        if (user) signOut(auth);
-        else document.getElementById('authModal').classList.add('show');
-      });
-    }
-  }
-
-  if (mobileNavLogin) {
-    mobileNavLogin.innerHTML = user ? `
-      <div class="auth-user-card" style="margin-bottom: 8px;">
-        <div class="auth-status-dot"></div>
-        <div class="auth-user-info"><span class="auth-user-email">${user.email}</span></div>
-      </div>
-      <button class="btn btn-secondary btn-sm" style="width: 100%;" id="mobileLogoutBtn">Logout</button>
-    ` : `
-      <button class="btn btn-primary btn-sm" style="width: 100%;" id="mobileLoginBtn">Login to Member Account</button>
-    `;
-    const mBtn = user ? document.getElementById('mobileLogoutBtn') : document.getElementById('mobileLoginBtn');
-    if (mBtn) {
-      mBtn.addEventListener('click', () => {
-        if (user) signOut(auth);
-        else {
-          document.getElementById('authModal').classList.add('show');
-          // Close mobile menu if open
-          const overlay = document.getElementById('mobileOverlay');
-          const nav = document.getElementById('mobileNav');
-          if (overlay && nav) {
-            overlay.classList.remove('open');
-            nav.classList.remove('open');
-          }
-        }
-      });
-    }
-  }
-
-  if (sidebarAuth) {
-    if (user) {
-      sidebarAuth.innerHTML = `
-        <div class="auth-user-card">
-          <div class="auth-status-dot"></div>
-          <div class="auth-user-info">
-            <span class="auth-user-email" style="font-weight: 600;">Member Active</span>
-            <span class="auth-user-email">${user.email}</span>
-          </div>
-        </div>
-      `;
-    } else {
-      sidebarAuth.innerHTML = `
-        <p style="font-size: 0.75rem; color: var(--text-muted); text-align: center; margin-bottom: 8px;">Log in to manage applications</p>
-        <button class="btn btn-primary btn-sm" style="width: 100%;" id="sidebarLoginBtn">Login</button>
-      `;
-      const sLogin = document.getElementById('sidebarLoginBtn');
-      if (sLogin) {
-        sLogin.addEventListener('click', () => {
-          document.getElementById('authModal').classList.add('show');
-        });
-      }
-    }
-  }
-
-  if (heroActions) {
-    if (user) {
-      heroActions.innerHTML = `
-        <button class="btn btn-primary" id="checkStatusBtn">Check Application Status</button>
-        <a href="https://chat.whatsapp.com/GNaYyJDxzMADbA1ARI1kne" target="_blank" rel="noopener noreferrer" class="btn btn-green">WhatsApp Community</a>
-      `;
-      document.getElementById('checkStatusBtn').addEventListener('click', checkForStatusUpdates);
-    } else {
-      heroActions.innerHTML = `
-        <button class="btn btn-primary" id="heroLoginBtn">Login to Check Status</button>
-        <a href="https://chat.whatsapp.com/GNaYyJDxzMADbA1ARI1kne" target="_blank" rel="noopener noreferrer" class="btn btn-green">WhatsApp Community</a>
-      `;
-      const hLogin = document.getElementById('heroLoginBtn');
-      if (hLogin) {
-        hLogin.addEventListener('click', () => {
-          document.getElementById('authModal').classList.add('show');
-        });
-      }
-    }
-  }
-
-  if (displayEmail) displayEmail.value = user ? user.email : '';
-  if (roleDisplayEmail) roleDisplayEmail.value = user ? user.email : '';
-
-  if (user) {
-    checkForStatusUpdates();
-    refreshMyData();
-  }
-}
-
-async function refreshMyData() {
-  const playerContainer = document.getElementById('applicationsContainer');
-  const roleContainer = document.getElementById('roleApplicationsContainer');
-
-  if (playerContainer) {
-    const apps = await fetchApplications();
-    renderApplications(playerContainer, apps);
-  }
-  if (roleContainer) {
-    const apps = await fetchRoleApplications();
-    renderRoleApplications(roleContainer, apps);
-  }
-}
-
-onAuthStateChanged(auth, (user) => {
-  updateAuthUI(user);
-});
-
-async function handleLogin() {
-  const email = document.getElementById('loginEmail').value.trim();
-  const pass = document.getElementById('loginPassword').value;
-  const btn = document.getElementById('doLogin');
-
-  if (!email || !pass) {
-    showToast('Please enter email and password', 'error');
-    return;
-  }
-
-  try {
-    btn.disabled = true;
-    btn.textContent = 'Logging in...';
-    await signInWithEmailAndPassword(auth, email, pass);
-    document.getElementById('authModal').classList.remove('show');
-    showToast('Logged in successfully!', 'success');
-  } catch (error) {
-    console.error("Login error:", error);
-    showToast('Login failed: ' + error.message, 'error');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Login';
-  }
-}
-
-// ---- Site Notification Modal ----
-function showToast(message, type) {
-  const toast = document.getElementById('toast');
-  if (!toast) return;
-  toast.className = 'toast ' + (type || '');
-  toast.innerHTML = `<span class="toast-icon">${type === 'success' ? '✓' : 'ℹ'}</span> ${message}`;
-  toast.classList.add('show');
-  clearTimeout(toast._timeout);
-  toast._timeout = setTimeout(() => toast.classList.remove('show'), 3000);
-}
-
 function setupMobileMenu() {
   const menuBtn = document.getElementById('menuBtn');
   const overlay = document.getElementById('mobileOverlay');
@@ -217,6 +42,147 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+// ---- Auth Logic ----
+
+let currentUser = null;
+
+function updateAuthUI(user) {
+  currentUser = user;
+  const sidebarAuth = document.getElementById('sidebarAuth');
+  const navLogin = document.getElementById('navLoginContainer');
+  const mobileNavLogin = document.getElementById('mobileNavLoginContainer');
+  const displayEmail = document.getElementById('displayEmail');
+  const roleDisplayEmail = document.getElementById('roleDisplayEmail');
+  const heroActions = document.getElementById('heroActions');
+
+  const loginHtml = `
+    <button class="nav-item" style="background: none; border: none; width: 100%; cursor: pointer;" id="openLoginBtn">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      Login to Member Account
+    </button>
+  `;
+
+  const logoutHtml = `
+    <button class="nav-item" style="background: none; border: none; width: 100%; cursor: pointer; color: var(--error);" id="logoutBtn">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Logout
+    </button>
+  `;
+
+  if (navLogin) {
+    navLogin.innerHTML = user ? logoutHtml : loginHtml;
+    const btn = user ? document.getElementById('logoutBtn') : document.getElementById('openLoginBtn');
+    if (btn) {
+      btn.onclick = () => {
+        if (user) signOut(auth);
+        else document.getElementById('authModal').classList.add('show');
+      };
+    }
+  }
+
+  if (mobileNavLogin) {
+    mobileNavLogin.innerHTML = user ? `
+      <div class="auth-user-card" style="margin-bottom: 8px;">
+        <div class="auth-status-dot"></div>
+        <div class="auth-user-info"><span class="auth-user-email">${user.email}</span></div>
+      </div>
+      <button class="btn btn-secondary btn-sm" style="width: 100%;" id="mobileLogoutBtn">Logout</button>
+    ` : `
+      <button class="btn btn-primary btn-sm" style="width: 100%;" id="mobileLoginBtn">Login to Member Account</button>
+    `;
+    const mBtn = user ? document.getElementById('mobileLogoutBtn') : document.getElementById('mobileLoginBtn');
+    if (mBtn) {
+      mBtn.onclick = () => {
+        if (user) signOut(auth);
+        else {
+          document.getElementById('authModal').classList.add('show');
+          const overlay = document.getElementById('mobileOverlay');
+          const nav = document.getElementById('mobileNav');
+          if (overlay && nav) {
+            overlay.classList.remove('open');
+            nav.classList.remove('open');
+          }
+        }
+      };
+    }
+  }
+
+  if (sidebarAuth) {
+    if (user) {
+      sidebarAuth.innerHTML = `
+        <div class="auth-user-card">
+          <div class="auth-status-dot"></div>
+          <div class="auth-user-info">
+            <span class="auth-user-email" style="font-weight: 600;">Member Active</span>
+            <span class="auth-user-email">${user.email}</span>
+          </div>
+        </div>
+      `;
+    } else {
+      sidebarAuth.innerHTML = `
+        <p style="font-size: 0.75rem; color: var(--text-muted); text-align: center; margin-bottom: 8px;">Log in to manage applications</p>
+        <button class="btn btn-primary btn-sm" style="width: 100%;" id="sidebarLoginBtn">Login</button>
+      `;
+      const sLogin = document.getElementById('sidebarLoginBtn');
+      if (sLogin) sLogin.onclick = () => document.getElementById('authModal').classList.add('show');
+    }
+  }
+
+  if (heroActions) {
+    if (user) {
+      heroActions.innerHTML = `
+        <button class="btn btn-primary" id="checkStatusBtn">Check Application Status</button>
+        <a href="https://chat.whatsapp.com/GNaYyJDxzMADbA1ARI1kne" target="_blank" rel="noopener noreferrer" class="btn btn-green">WhatsApp Community</a>
+      `;
+      document.getElementById('checkStatusBtn').onclick = checkForStatusUpdates;
+    } else {
+      heroActions.innerHTML = `
+        <button class="btn btn-primary" id="heroLoginBtn">Login to Check Status</button>
+        <a href="https://chat.whatsapp.com/GNaYyJDxzMADbA1ARI1kne" target="_blank" rel="noopener noreferrer" class="btn btn-green">WhatsApp Community</a>
+      `;
+      const hLogin = document.getElementById('heroLoginBtn');
+      if (hLogin) hLogin.onclick = () => document.getElementById('authModal').classList.add('show');
+    }
+  }
+
+  if (displayEmail) displayEmail.value = user ? user.email : '';
+  if (roleDisplayEmail) roleDisplayEmail.value = user ? user.email : '';
+
+  if (user) {
+    checkForStatusUpdates();
+    refreshMyData();
+  }
+}
+
+async function handleLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPassword').value;
+  const btn = document.getElementById('doLogin');
+
+  if (!email || !pass) {
+    showToast('Please enter email and password', 'error');
+    return;
+  }
+
+  try {
+    btn.disabled = true;
+    btn.textContent = 'Logging in...';
+    await signInWithEmailAndPassword(auth, email, pass);
+    document.getElementById('authModal').classList.remove('show');
+    showToast('Logged in successfully!', 'success');
+  } catch (error) {
+    console.error("Login error:", error);
+    showToast('Login failed: ' + error.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Login';
+  }
+}
+
+onAuthStateChanged(auth, (user) => {
+  updateAuthUI(user);
+});
+
 // ---- Site Notification Modal ----
 
 function injectStatusModal() {
@@ -234,9 +200,9 @@ function injectStatusModal() {
   `;
   document.body.insertAdjacentHTML('beforeend', modalHtml);
 
-  document.getElementById('closeStatusModal').addEventListener('click', () => {
+  document.getElementById('closeStatusModal').onclick = () => {
     document.getElementById('statusUpdateModal').classList.remove('show');
-  });
+  };
 }
 
 async function checkForStatusUpdates() {
@@ -385,6 +351,20 @@ async function fetchRoleApplications() {
   } catch (error) {
     console.error("Error fetching role applications:", error);
     return [];
+  }
+}
+
+async function refreshMyData() {
+  const playerContainer = document.getElementById('applicationsContainer');
+  const roleContainer = document.getElementById('roleApplicationsContainer');
+
+  if (playerContainer) {
+    const apps = await fetchApplications();
+    renderApplications(playerContainer, apps);
+  }
+  if (roleContainer) {
+    const apps = await fetchRoleApplications();
+    renderRoleApplications(roleContainer, apps);
   }
 }
 
@@ -565,11 +545,8 @@ function renderSuggestions(container, suggestions) {
     `;
   }).join('');
 
-  // Add event listeners to vote buttons
   container.querySelectorAll('.vote-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      voteSuggestion(e.target.dataset.id);
-    });
+    btn.onclick = (e) => voteSuggestion(e.target.dataset.id);
   });
 }
 
@@ -578,8 +555,6 @@ async function voteSuggestion(id) {
   if (!voterId) return;
 
   try {
-    const sugRef = doc(db, 'merchSuggestions', id);
-    // Fetch latest to check if already voted (double check)
     const snapshot = await getDocs(query(collection(db, 'merchSuggestions'), where('id', '==', id)));
     if (snapshot.empty) return;
 
@@ -592,7 +567,6 @@ async function voteSuggestion(id) {
     });
 
     showToast('Vote recorded!', 'success');
-    // Live update will happen via onSnapshot if we use it, otherwise re-fetch
     const updatedSuggestions = await fetchSuggestions();
     renderSuggestions(document.getElementById('suggestionsContainer'), updatedSuggestions);
   } catch (error) {
@@ -606,25 +580,24 @@ async function voteSuggestion(id) {
 document.addEventListener('DOMContentLoaded', async () => {
   setupMobileMenu();
   await migrateLocalData();
-  await checkForStatusUpdates();
 
-  // Auth modal listeners
+  // Explicitly call updateAuthUI(null) to ensure login button shows up immediately
+  updateAuthUI(null);
+
   const closeAuthBtn = document.getElementById('closeAuthModal');
   if (closeAuthBtn) {
-    closeAuthBtn.addEventListener('click', () => {
-      document.getElementById('authModal').classList.remove('show');
-    });
+    closeAuthBtn.onclick = () => document.getElementById('authModal').classList.remove('show');
   }
 
   const loginBtn = document.getElementById('doLogin');
   if (loginBtn) {
-    loginBtn.addEventListener('click', handleLogin);
+    loginBtn.onclick = handleLogin;
   }
 
   // Player Application Form
   const form = document.getElementById('applicationForm');
   if (form) {
-    form.addEventListener('submit', async (e) => {
+    form.onsubmit = async (e) => {
       e.preventDefault();
 
       if (!currentUser) {
@@ -636,8 +609,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       const application = {
         id: 'EA-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substr(2, 4).toUpperCase(),
         fullName: document.getElementById('fullName').value.trim(),
-        email: currentUser.email, // Use logged in email
-        userId: currentUser.uid, // Add UID for linking
+        email: currentUser.email,
+        userId: currentUser.uid,
         age: parseInt(document.getElementById('age').value),
         location: document.getElementById('location').value.trim(),
         dartcounter: document.getElementById('dartcounter').value.trim(),
@@ -654,24 +627,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       try {
         const docRef = await addDoc(collection(db, 'merchPlayerApplications'), application);
-        // Store the auto-generated ID in localStorage for "My Applications" view
         saveMyId('myPlayerAppIds', docRef.id);
-
         showToast('Application submitted successfully!', 'success');
         form.reset();
-        const apps = await fetchApplications();
-        renderApplications(document.getElementById('applicationsContainer'), apps);
+        refreshMyData();
       } catch (error) {
         console.error("Error submitting application:", error);
         showToast('Error: ' + error.message, 'error');
       }
-    });
+    };
   }
 
   // Role Application Form
   const roleForm = document.getElementById('roleForm');
   if (roleForm) {
-    roleForm.addEventListener('submit', async (e) => {
+    roleForm.onsubmit = async (e) => {
       e.preventDefault();
 
       if (!currentUser) {
@@ -683,7 +653,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const application = {
         id: 'EA-ROLE-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substr(2, 4).toUpperCase(),
         fullName: document.getElementById('roleFullName').value.trim(),
-        email: currentUser.email, // Use logged in email
+        email: currentUser.email,
         userId: currentUser.uid,
         position: document.getElementById('rolePosition').value,
         experience: document.getElementById('roleExperience').value.trim(),
@@ -696,24 +666,21 @@ document.addEventListener('DOMContentLoaded', async () => {
       try {
         const docRef = await addDoc(collection(db, 'merchRoleApplications'), application);
         saveMyId('myRoleAppIds', docRef.id);
-
         showToast('Role application submitted successfully!', 'success');
         roleForm.reset();
-        const apps = await fetchRoleApplications();
-        renderRoleApplications(document.getElementById('roleApplicationsContainer'), apps);
+        refreshMyData();
       } catch (error) {
         console.error("Error submitting role application:", error);
         showToast('Error: ' + error.message, 'error');
       }
-    });
+    };
   }
 
   // Suggestions Form
   const sugForm = document.getElementById('suggestionForm');
   if (sugForm) {
-    sugForm.addEventListener('submit', async (e) => {
+    sugForm.onsubmit = async (e) => {
       e.preventDefault();
-
       const suggestion = {
         id: 'EA-SUG-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substr(2, 4).toUpperCase(),
         submittedBy: document.getElementById('sugName').value.trim(),
@@ -725,7 +692,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         status: 'new',
         submittedAt: new Date().toISOString(),
       };
-
       try {
         await addDoc(collection(db, 'merchSuggestions'), suggestion);
         showToast('Suggestion submitted successfully!', 'success');
@@ -733,25 +699,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         const suggestions = await fetchSuggestions();
         renderSuggestions(document.getElementById('suggestionsContainer'), suggestions);
       } catch (error) {
-        console.error("Error submitting suggestion:", error);
         showToast('Error: ' + error.message, 'error');
       }
-    });
+    };
   }
 
   // Initial Data Load
-  const appsContainer = document.getElementById('applicationsContainer');
-  if (appsContainer) {
-    const apps = await fetchApplications();
-    renderApplications(appsContainer, apps);
-  }
-
-  const roleContainer = document.getElementById('roleApplicationsContainer');
-  if (roleContainer) {
-    const apps = await fetchRoleApplications();
-    renderRoleApplications(roleContainer, apps);
-  }
-
+  refreshMyData();
   const sugContainer = document.getElementById('suggestionsContainer');
   if (sugContainer) {
     const suggestions = await fetchSuggestions();

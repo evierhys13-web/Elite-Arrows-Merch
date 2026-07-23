@@ -1,29 +1,6 @@
-// ---- Player Applications ----
-function getApplications() {
-  try {
-    return JSON.parse(localStorage.getItem('eliteArrowsApplications')) || [];
-  } catch {
-    return [];
-  }
-}
+import { db, collection, doc, setDoc, getDocs, query, orderBy, onSnapshot, updateDoc, addDoc } from "./firebase-config.js";
 
-function saveApplications(apps) {
-  localStorage.setItem('eliteArrowsApplications', JSON.stringify(apps));
-}
-
-// ---- Role Applications ----
-function getRoleApplications() {
-  try {
-    return JSON.parse(localStorage.getItem('eliteArrowsRoleApplications')) || [];
-  } catch {
-    return [];
-  }
-}
-
-function saveRoleApplications(apps) {
-  localStorage.setItem('eliteArrowsRoleApplications', JSON.stringify(apps));
-}
-
+// ---- Utility Functions ----
 function showToast(message, type) {
   const toast = document.getElementById('toast');
   if (!toast) return;
@@ -59,121 +36,79 @@ function setupMobileMenu() {
   nav.querySelectorAll('a').forEach(a => a.addEventListener('click', close));
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  setupMobileMenu();
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
 
-  // Player Application Form
-  const form = document.getElementById('applicationForm');
-  if (form) {
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
+// ---- Data Fetching & Syncing ----
 
-      const application = {
-        id: 'EA-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substr(2, 4).toUpperCase(),
-        fullName: document.getElementById('fullName').value.trim(),
-        email: document.getElementById('email').value.trim(),
-        age: parseInt(document.getElementById('age').value),
-        location: document.getElementById('location').value.trim(),
-        dartcounter: document.getElementById('dartcounter').value.trim(),
-        whatsapp: document.getElementById('whatsapp').value.trim(),
-        experience: document.getElementById('experience').value,
-        avgScore: parseFloat(document.getElementById('avgScore').value) || 0,
-        whyJoin: document.getElementById('whyJoin').value.trim(),
-        availability: document.getElementById('availability').value,
-        referral: document.getElementById('referral').value.trim(),
-        type: 'player',
-        status: 'pending',
-        submittedAt: new Date().toISOString(),
-      };
-
-      const apps = getApplications();
-      apps.push(application);
-      saveApplications(apps);
-
-      showToast('Application submitted successfully!', 'success');
-      form.reset();
-      renderApplications(document.getElementById('applicationsContainer'));
-    });
+function getMyIds(key) {
+  try {
+    return JSON.parse(localStorage.getItem(key)) || [];
+  } catch {
+    return [];
   }
+}
 
-  // Role Application Form
-  const roleForm = document.getElementById('roleForm');
-  if (roleForm) {
-    roleForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-
-      const application = {
-        id: 'EA-ROLE-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substr(2, 4).toUpperCase(),
-        fullName: document.getElementById('roleFullName').value.trim(),
-        email: document.getElementById('roleEmail').value.trim(),
-        position: document.getElementById('rolePosition').value,
-        experience: document.getElementById('roleExperience').value.trim(),
-        availability: document.getElementById('roleAvailability').value,
-        type: 'role',
-        status: 'pending',
-        submittedAt: new Date().toISOString(),
-      };
-
-      const apps = getRoleApplications();
-      apps.push(application);
-      saveRoleApplications(apps);
-
-      showToast('Role application submitted successfully!', 'success');
-      roleForm.reset();
-      renderRoleApplications(document.getElementById('roleApplicationsContainer'));
-    });
+function saveMyId(key, id) {
+  const ids = getMyIds(key);
+  if (!ids.includes(id)) {
+    ids.push(id);
+    localStorage.setItem(key, JSON.stringify(ids));
   }
+}
 
-  // Render player applications
-  const appsContainer = document.getElementById('applicationsContainer');
-  if (appsContainer) {
-    renderApplications(appsContainer);
+async function fetchApplications() {
+  try {
+    const myIds = getMyIds('myPlayerAppIds');
+    if (myIds.length === 0) return [];
+
+    const q = query(collection(db, 'merchPlayerApplications'), orderBy('submittedAt', 'desc'));
+    const snapshot = await getDocs(q);
+    // Filter by my IDs to maintain privacy on the public page
+    return snapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter(app => myIds.includes(app.id) || myIds.includes(app.customId));
+  } catch (error) {
+    console.error("Error fetching applications:", error);
+    return [];
   }
+}
 
-  // Render role applications
-  const roleContainer = document.getElementById('roleApplicationsContainer');
-  if (roleContainer) {
-    renderRoleApplications(roleContainer);
+async function fetchRoleApplications() {
+  try {
+    const myIds = getMyIds('myRoleAppIds');
+    if (myIds.length === 0) return [];
+
+    const q = query(collection(db, 'merchRoleApplications'), orderBy('submittedAt', 'desc'));
+    const snapshot = await getDocs(q);
+    return snapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter(app => myIds.includes(app.id) || myIds.includes(app.customId));
+  } catch (error) {
+    console.error("Error fetching role applications:", error);
+    return [];
   }
+}
 
-  // Suggestions
-  const sugForm = document.getElementById('suggestionForm');
-  if (sugForm) {
-    sugForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-
-      const suggestion = {
-        id: 'EA-SUG-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substr(2, 4).toUpperCase(),
-        submittedBy: document.getElementById('sugName').value.trim(),
-        title: document.getElementById('sugTitle').value.trim(),
-        description: document.getElementById('sugDescription').value.trim(),
-        category: document.getElementById('sugCategory').value,
-        votes: 0,
-        voters: [],
-        status: 'new',
-        submittedAt: new Date().toISOString(),
-      };
-
-      const suggestions = getSuggestions();
-      suggestions.push(suggestion);
-      saveSuggestions(suggestions);
-
-      showToast('Suggestion submitted successfully!', 'success');
-      sugForm.reset();
-      renderSuggestions(document.getElementById('suggestionsContainer'));
-    });
+async function fetchSuggestions() {
+  try {
+    const q = query(collection(db, 'merchSuggestions'), orderBy('submittedAt', 'desc'));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  } catch (error) {
+    console.error("Error fetching suggestions:", error);
+    return [];
   }
+}
 
-  const sugContainer = document.getElementById('suggestionsContainer');
-  if (sugContainer) {
-    renderSuggestions(sugContainer);
-  }
-});
+// ---- Rendering Functions ----
 
-function renderApplications(container) {
-  const apps = getApplications();
-
-  if (apps.length === 0) {
+function renderApplications(container, apps) {
+  if (!container) return;
+  if (!apps || apps.length === 0) {
     container.innerHTML = `
       <div class="empty-state">
         <div class="empty-icon">📋</div>
@@ -184,7 +119,7 @@ function renderApplications(container) {
     return;
   }
 
-  container.innerHTML = apps.reverse().map(app => {
+  container.innerHTML = apps.map(app => {
     const statusClass = app.status === 'approved' || app.status === 'onboarding_complete' ? 'status-approved' : app.status === 'rejected' ? 'status-rejected' : 'status-pending';
     const statusLabel = app.status === 'onboarding_complete' ? 'Onboarding Complete' : app.status.charAt(0).toUpperCase() + app.status.slice(1);
 
@@ -215,10 +150,9 @@ function renderApplications(container) {
   }).join('');
 }
 
-function renderRoleApplications(container) {
-  const apps = getRoleApplications();
-
-  if (apps.length === 0) {
+function renderRoleApplications(container, apps) {
+  if (!container) return;
+  if (!apps || apps.length === 0) {
     container.innerHTML = `
       <div class="empty-state">
         <div class="empty-icon">💼</div>
@@ -240,7 +174,7 @@ function renderRoleApplications(container) {
     other: 'Other',
   };
 
-  container.innerHTML = apps.reverse().map(app => {
+  container.innerHTML = apps.map(app => {
     const statusClass = app.status === 'approved' ? 'status-approved' : app.status === 'rejected' ? 'status-rejected' : 'status-pending';
     const statusLabel = app.status.charAt(0).toUpperCase() + app.status.slice(1);
 
@@ -265,23 +199,9 @@ function renderRoleApplications(container) {
   }).join('');
 }
 
-// ---- Suggestions ----
-function getSuggestions() {
-  try {
-    return JSON.parse(localStorage.getItem('eliteArrowsSuggestions')) || [];
-  } catch {
-    return [];
-  }
-}
-
-function saveSuggestions(suggestions) {
-  localStorage.setItem('eliteArrowsSuggestions', JSON.stringify(suggestions));
-}
-
-function renderSuggestions(container) {
-  const suggestions = getSuggestions();
-
-  if (suggestions.length === 0) {
+function renderSuggestions(container, suggestions) {
+  if (!container) return;
+  if (!suggestions || suggestions.length === 0) {
     container.innerHTML = `
       <div class="empty-state">
         <div class="empty-icon">💡</div>
@@ -321,13 +241,13 @@ function renderSuggestions(container) {
   const voterId = localStorage.getItem('sugVoterId') || 'voter-' + Math.random().toString(36).substr(2, 8);
   localStorage.setItem('sugVoterId', voterId);
 
-  container.innerHTML = suggestions.reverse().map(s => {
+  container.innerHTML = suggestions.map(s => {
     const statusClass = statusClasses[s.status] || 'status-pending';
     const statusLabel = statusLabels[s.status] || 'New';
     const hasVoted = s.voters && s.voters.includes(voterId);
 
     return `
-      <div class="app-card">
+      <div class="app-card" data-id="${s.id}">
         <div class="app-card-header">
           <div>
             <div class="app-name">${escapeHtml(s.title)}</div>
@@ -340,7 +260,7 @@ function renderSuggestions(container) {
           <div class="app-detail"><span class="detail-label">Submitted:</span> ${new Date(s.submittedAt).toLocaleString()}</div>
           <div class="app-detail app-why-join">${escapeHtml(s.description)}</div>
           <div style="display: flex; align-items: center; gap: 12px; margin-top: 16px;">
-            <button class="btn btn-sm ${hasVoted ? 'btn-secondary' : 'btn-primary'}" onclick="voteSuggestion('${s.id}')" ${hasVoted ? 'disabled' : ''}>
+            <button class="btn btn-sm vote-btn ${hasVoted ? 'btn-secondary' : 'btn-primary'}" data-id="${s.id}" ${hasVoted ? 'disabled' : ''}>
               ${hasVoted ? '✓ Voted' : '▲ Vote'}
             </button>
             <span style="color: var(--text-secondary); font-size: 0.9rem; font-weight: 600;">${s.votes || 0} vote${s.votes !== 1 ? 's' : ''}</span>
@@ -349,28 +269,169 @@ function renderSuggestions(container) {
       </div>
     `;
   }).join('');
+
+  // Add event listeners to vote buttons
+  container.querySelectorAll('.vote-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      voteSuggestion(e.target.dataset.id);
+    });
+  });
 }
 
-function voteSuggestion(id) {
-  const suggestions = getSuggestions();
-  const s = suggestions.find(x => x.id === id);
-  if (!s) return;
-
+async function voteSuggestion(id) {
   const voterId = localStorage.getItem('sugVoterId');
-  if (!voterId || (s.voters && s.voters.includes(voterId))) return;
+  if (!voterId) return;
 
-  s.votes = (s.votes || 0) + 1;
-  s.voters = s.voters || [];
-  s.voters.push(voterId);
-  saveSuggestions(suggestions);
+  try {
+    const sugRef = doc(db, 'merchSuggestions', id);
+    // Fetch latest to check if already voted (double check)
+    const snapshot = await getDocs(query(collection(db, 'merchSuggestions'), where('id', '==', id)));
+    if (snapshot.empty) return;
 
-  const container = document.getElementById('suggestionsContainer');
-  if (container) renderSuggestions(container);
-  showToast('Vote recorded!', 'success');
+    const s = snapshot.docs[0].data();
+    if (s.voters && s.voters.includes(voterId)) return;
+
+    await updateDoc(doc(db, 'merchSuggestions', snapshot.docs[0].id), {
+      votes: (s.votes || 0) + 1,
+      voters: [...(s.voters || []), voterId]
+    });
+
+    showToast('Vote recorded!', 'success');
+    // Live update will happen via onSnapshot if we use it, otherwise re-fetch
+    const updatedSuggestions = await fetchSuggestions();
+    renderSuggestions(document.getElementById('suggestionsContainer'), updatedSuggestions);
+  } catch (error) {
+    console.error("Error voting:", error);
+    showToast('Error recording vote', 'error');
+  }
 }
 
-function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
+// ---- Initialization ----
+
+document.addEventListener('DOMContentLoaded', async () => {
+  setupMobileMenu();
+
+  // Player Application Form
+  const form = document.getElementById('applicationForm');
+  if (form) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const application = {
+        id: 'EA-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substr(2, 4).toUpperCase(),
+        fullName: document.getElementById('fullName').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        age: parseInt(document.getElementById('age').value),
+        location: document.getElementById('location').value.trim(),
+        dartcounter: document.getElementById('dartcounter').value.trim(),
+        whatsapp: document.getElementById('whatsapp').value.trim(),
+        experience: document.getElementById('experience').value,
+        avgScore: parseFloat(document.getElementById('avgScore').value) || 0,
+        whyJoin: document.getElementById('whyJoin').value.trim(),
+        availability: document.getElementById('availability').value,
+        referral: document.getElementById('referral').value.trim(),
+        type: 'player',
+        status: 'pending',
+        submittedAt: new Date().toISOString(),
+      };
+
+      // Store in localStorage for "My Applications" view
+      saveMyId('myPlayerAppIds', application.id);
+
+      try {
+        await addDoc(collection(db, 'merchPlayerApplications'), application);
+        showToast('Application submitted successfully!', 'success');
+        form.reset();
+        const apps = await fetchApplications();
+        renderApplications(document.getElementById('applicationsContainer'), apps);
+      } catch (error) {
+        console.error("Error submitting application:", error);
+        showToast('Error submitting application', 'error');
+      }
+    });
+  }
+
+  // Role Application Form
+  const roleForm = document.getElementById('roleForm');
+  if (roleForm) {
+    roleForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const application = {
+        id: 'EA-ROLE-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substr(2, 4).toUpperCase(),
+        fullName: document.getElementById('roleFullName').value.trim(),
+        email: document.getElementById('roleEmail').value.trim(),
+        position: document.getElementById('rolePosition').value,
+        experience: document.getElementById('roleExperience').value.trim(),
+        availability: document.getElementById('roleAvailability').value,
+        type: 'role',
+        status: 'pending',
+        submittedAt: new Date().toISOString(),
+      };
+
+      // Store in localStorage for "My Applications" view
+      saveMyId('myRoleAppIds', application.id);
+
+      try {
+        await addDoc(collection(db, 'merchRoleApplications'), application);
+        showToast('Role application submitted successfully!', 'success');
+        roleForm.reset();
+        const apps = await fetchRoleApplications();
+        renderRoleApplications(document.getElementById('roleApplicationsContainer'), apps);
+      } catch (error) {
+        console.error("Error submitting role application:", error);
+        showToast('Error submitting application', 'error');
+      }
+    });
+  }
+
+  // Suggestions Form
+  const sugForm = document.getElementById('suggestionForm');
+  if (sugForm) {
+    sugForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const suggestion = {
+        id: 'EA-SUG-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substr(2, 4).toUpperCase(),
+        submittedBy: document.getElementById('sugName').value.trim(),
+        title: document.getElementById('sugTitle').value.trim(),
+        description: document.getElementById('sugDescription').value.trim(),
+        category: document.getElementById('sugCategory').value,
+        votes: 0,
+        voters: [],
+        status: 'new',
+        submittedAt: new Date().toISOString(),
+      };
+
+      try {
+        await addDoc(collection(db, 'merchSuggestions'), suggestion);
+        showToast('Suggestion submitted successfully!', 'success');
+        sugForm.reset();
+        const suggestions = await fetchSuggestions();
+        renderSuggestions(document.getElementById('suggestionsContainer'), suggestions);
+      } catch (error) {
+        console.error("Error submitting suggestion:", error);
+        showToast('Error submitting suggestion', 'error');
+      }
+    });
+  }
+
+  // Initial Data Load
+  const appsContainer = document.getElementById('applicationsContainer');
+  if (appsContainer) {
+    const apps = await fetchApplications();
+    renderApplications(appsContainer, apps);
+  }
+
+  const roleContainer = document.getElementById('roleApplicationsContainer');
+  if (roleContainer) {
+    const apps = await fetchRoleApplications();
+    renderRoleApplications(roleContainer, apps);
+  }
+
+  const sugContainer = document.getElementById('suggestionsContainer');
+  if (sugContainer) {
+    const suggestions = await fetchSuggestions();
+    renderSuggestions(sugContainer, suggestions);
+  }
+});

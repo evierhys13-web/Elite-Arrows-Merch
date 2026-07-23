@@ -133,8 +133,10 @@
 
   <div class="toast" id="toast"></div>
 
-  <script>
-    function showToast(message, type) {
+  <script type="module">
+    import { db, collection, doc, setDoc, getDocs, query, orderBy, onSnapshot, updateDoc, deleteDoc } from "./firebase-config.js";
+
+    window.showToast = function(message, type) {
       const toast = document.getElementById('toast');
       toast.className = 'toast ' + (type || '');
       toast.innerHTML = '<span class="toast-icon">✓</span> ' + message;
@@ -142,7 +144,7 @@
       setTimeout(function() { toast.classList.remove('show'); }, 2500);
     }
 
-    function switchTab(tab, btn) {
+    window.switchTab = function(tab, btn) {
       document.querySelectorAll('.admin-tab').forEach(function(t) { t.classList.remove('active'); });
       btn.classList.add('active');
       document.getElementById('playersSection').style.display = tab === 'players' ? 'block' : 'none';
@@ -150,15 +152,21 @@
       document.getElementById('suggestionsSection').style.display = tab === 'suggestions' ? 'block' : 'none';
     }
 
-    function updateApplicationStatus(storageKey, id, newStatus) {
-      var apps = JSON.parse(localStorage.getItem(storageKey) || '[]');
-      var app = apps.find(function(a) { return a.id === id; });
-      if (app) {
-        app.status = newStatus;
-        localStorage.setItem(storageKey, JSON.stringify(apps));
-        var label = newStatus === 'approved' ? 'approved' : newStatus === 'onboarding_complete' ? 'onboarding complete' : 'rejected';
-        showToast(app.fullName + ' ' + label + '!', 'success');
-        loadAdmin();
+    window.updateApplicationStatus = async function(collectionName, id, newStatus) {
+      try {
+        const q = query(collection(db, collectionName), orderBy('submittedAt', 'desc'));
+        const snapshot = await getDocs(query(collection(db, collectionName)));
+        const docRef = snapshot.docs.find(d => d.data().id === id);
+
+        if (docRef) {
+          await updateDoc(doc(db, collectionName, docRef.id), { status: newStatus });
+          const app = docRef.data();
+          var label = newStatus === 'approved' ? 'approved' : newStatus === 'onboarding_complete' ? 'onboarding complete' : 'rejected';
+          window.showToast(app.fullName + ' ' + label + '!', 'success');
+          loadAdmin();
+        }
+      } catch (error) {
+        console.error("Error updating status:", error);
       }
     }
 
@@ -168,12 +176,19 @@
       return div.innerHTML;
     }
 
-    function getSuggestions() {
-      try { return JSON.parse(localStorage.getItem('eliteArrowsSuggestions') || '[]'); } catch(e) { return []; }
-    }
+    window.updateSuggestionStatus = async function(id, newStatus) {
+      try {
+        const snapshot = await getDocs(query(collection(db, 'merchSuggestions')));
+        const docRef = snapshot.docs.find(d => d.data().id === id);
 
-    function saveSuggestions(suggestions) {
-      localStorage.setItem('eliteArrowsSuggestions', JSON.stringify(suggestions));
+        if (docRef) {
+          await updateDoc(doc(db, 'merchSuggestions', docRef.id), { status: newStatus });
+          window.showToast('Suggestion updated to "' + suggestionStatuses[newStatus].label + '"', 'success');
+          loadAdmin();
+        }
+      } catch (error) {
+        console.error("Error updating suggestion:", error);
+      }
     }
 
     var suggestionStatuses = {
@@ -184,17 +199,6 @@
       completed: { label: 'Completed', cls: 'status-approved' },
       declined: { label: 'Declined', cls: 'status-rejected' }
     };
-
-    function updateSuggestionStatus(id, newStatus) {
-      var suggestions = getSuggestions();
-      var s = suggestions.find(function(x) { return x.id === id; });
-      if (s) {
-        s.status = newStatus;
-        saveSuggestions(suggestions);
-        showToast('Suggestion updated to "' + suggestionStatuses[newStatus].label + '"', 'success');
-        loadAdmin();
-      }
-    }
 
     var positionLabels = {
       streamer: 'Streamer / Content Creator',
@@ -207,110 +211,118 @@
       other: 'Other'
     };
 
-    function loadAdmin() {
-      var playerApps = JSON.parse(localStorage.getItem('eliteArrowsApplications') || '[]');
-      var roleApps = JSON.parse(localStorage.getItem('eliteArrowsRoleApplications') || '[]');
-      var suggestions = getSuggestions();
+    window.loadAdmin = async function() {
+      try {
+        const playerSnap = await getDocs(query(collection(db, 'merchPlayerApplications'), orderBy('submittedAt', 'desc')));
+        const roleSnap = await getDocs(query(collection(db, 'merchRoleApplications'), orderBy('submittedAt', 'desc')));
+        const sugSnap = await getDocs(query(collection(db, 'merchSuggestions'), orderBy('submittedAt', 'desc')));
 
-      document.getElementById('totalPlayerCount').textContent = playerApps.length;
-      document.getElementById('pendingPlayerCount').textContent = playerApps.filter(function(a) { return a.status === 'pending'; }).length;
-      document.getElementById('totalRoleCount').textContent = roleApps.length;
-      document.getElementById('pendingRoleCount').textContent = roleApps.filter(function(a) { return a.status === 'pending'; }).length;
-      document.getElementById('totalSuggestions').textContent = suggestions.length;
-      document.getElementById('pendingSuggestions').textContent = suggestions.filter(function(s) { return s.status === 'new'; }).length;
+        const playerApps = playerSnap.docs.map(d => d.data());
+        const roleApps = roleSnap.docs.map(d => d.data());
+        const suggestions = sugSnap.docs.map(d => d.data());
 
-      // Player apps
-      var playersContainer = document.getElementById('playersList');
-      if (playerApps.length === 0) {
-        playersContainer.innerHTML = '<p style="color: var(--text-muted);">No applications found.</p>';
-      } else {
-        playersContainer.innerHTML = playerApps.reverse().map(function(app) {
-          var statusClass = app.status === 'approved' || app.status === 'onboarding_complete' ? 'status-approved' : app.status === 'rejected' ? 'status-rejected' : 'status-pending';
-          var statusLabel = app.status === 'onboarding_complete' ? 'Onboarding Complete' : app.status.charAt(0).toUpperCase() + app.status.slice(1);
-          return '<div class="app-admin-item">' +
-            '<div class="app-admin-info">' +
-              '<div class="name">' + escapeHtml(app.fullName) + '</div>' +
-              '<div class="meta">' + app.id + ' &middot; ' + new Date(app.submittedAt).toLocaleString() + ' &middot; ' +
-                '<span class="' + statusClass + '" style="padding: 2px 8px; border-radius: 99px; font-weight: 700; font-size: 0.75rem;">' + statusLabel + '</span></div>' +
-              '<div class="details">' +
-                '<p>Email: ' + escapeHtml(app.email) + '</p>' +
-                '<p>Age: ' + app.age + ' &middot; Location: ' + escapeHtml(app.location) + '</p>' +
-                '<p>DartCounter: ' + escapeHtml(app.dartcounter || 'N/A') + ' &middot; WhatsApp: ' + escapeHtml(app.whatsapp || 'N/A') + '</p>' +
-                '<p>Experience: ' + escapeHtml(app.experience) + ' &middot; Avg Score: ' + (app.avgScore || 'N/A') + '</p>' +
-                '<p>Availability: ' + escapeHtml(app.availability) + ' &middot; Referral: ' + escapeHtml(app.referral || 'N/A') + '</p>' +
+        document.getElementById('totalPlayerCount').textContent = playerApps.length;
+        document.getElementById('pendingPlayerCount').textContent = playerApps.filter(function(a) { return a.status === 'pending'; }).length;
+        document.getElementById('totalRoleCount').textContent = roleApps.length;
+        document.getElementById('pendingRoleCount').textContent = roleApps.filter(function(a) { return a.status === 'pending'; }).length;
+        document.getElementById('totalSuggestions').textContent = suggestions.length;
+        document.getElementById('pendingSuggestions').textContent = suggestions.filter(function(s) { return s.status === 'new'; }).length;
+
+        // Player apps
+        var playersContainer = document.getElementById('playersList');
+        if (playerApps.length === 0) {
+          playersContainer.innerHTML = '<p style="color: var(--text-muted);">No applications found.</p>';
+        } else {
+          playersContainer.innerHTML = playerApps.map(function(app) {
+            var statusClass = app.status === 'approved' || app.status === 'onboarding_complete' ? 'status-approved' : app.status === 'rejected' ? 'status-rejected' : 'status-pending';
+            var statusLabel = app.status === 'onboarding_complete' ? 'Onboarding Complete' : app.status.charAt(0).toUpperCase() + app.status.slice(1);
+            return '<div class="app-admin-item">' +
+              '<div class="app-admin-info">' +
+                '<div class="name">' + escapeHtml(app.fullName) + '</div>' +
+                '<div class="meta">' + app.id + ' &middot; ' + new Date(app.submittedAt).toLocaleString() + ' &middot; ' +
+                  '<span class="' + statusClass + '" style="padding: 2px 8px; border-radius: 99px; font-weight: 700; font-size: 0.75rem;">' + statusLabel + '</span></div>' +
+                '<div class="details">' +
+                  '<p>Email: ' + escapeHtml(app.email) + '</p>' +
+                  '<p>Age: ' + app.age + ' &middot; Location: ' + escapeHtml(app.location) + '</p>' +
+                  '<p>DartCounter: ' + escapeHtml(app.dartcounter || 'N/A') + ' &middot; WhatsApp: ' + escapeHtml(app.whatsapp || 'N/A') + '</p>' +
+                  '<p>Experience: ' + escapeHtml(app.experience) + ' &middot; Avg Score: ' + (app.avgScore || 'N/A') + '</p>' +
+                  '<p>Availability: ' + escapeHtml(app.availability) + ' &middot; Referral: ' + escapeHtml(app.referral || 'N/A') + '</p>' +
+                '</div>' +
+                '<div class="why-join">' + escapeHtml(app.whyJoin) + '</div>' +
               '</div>' +
-              '<div class="why-join">' + escapeHtml(app.whyJoin) + '</div>' +
-            '</div>' +
-            (app.status === 'pending'
-              ? '<div class="app-admin-actions">' +
-                  '<button class="btn-approve" onclick="updateApplicationStatus(\'eliteArrowsApplications\', \'' + app.id + '\', \'approved\')">Approve</button>' +
-                  '<button class="btn-approve" style="background: var(--accent-primary);" onclick="updateApplicationStatus(\'eliteArrowsApplications\', \'' + app.id + '\', \'onboarding_complete\')">Onboarding Complete</button>' +
-                  '<button class="btn-reject" onclick="updateApplicationStatus(\'eliteArrowsApplications\', \'' + app.id + '\', \'rejected\')">Reject</button>' +
-                '</div>'
-              : '') +
-          '</div>';
-        }).join('');
-      }
-
-      // Suggestions
-      var suggestionsContainer = document.getElementById('suggestionsList');
-      if (suggestions.length === 0) {
-        suggestionsContainer.innerHTML = '<p style="color: var(--text-muted);">No suggestions found.</p>';
-      } else {
-        suggestionsContainer.innerHTML = suggestions.reverse().map(function(s) {
-          var statusObj = suggestionStatuses[s.status] || suggestionStatuses.new;
-          var statusOpts = Object.keys(suggestionStatuses).map(function(key) {
-            var selected = key === s.status ? 'selected' : '';
-            return '<option value="' + key + '" ' + selected + '>' + suggestionStatuses[key].label + '</option>';
+              (app.status === 'pending'
+                ? '<div class="app-admin-actions">' +
+                    '<button class="btn-approve" onclick="updateApplicationStatus(\'merchPlayerApplications\', \'' + app.id + '\', \'approved\')">Approve</button>' +
+                    '<button class="btn-approve" style="background: var(--accent-primary);" onclick="updateApplicationStatus(\'merchPlayerApplications\', \'' + app.id + '\', \'onboarding_complete\')">Onboarding Complete</button>' +
+                    '<button class="btn-reject" onclick="updateApplicationStatus(\'merchPlayerApplications\', \'' + app.id + '\', \'rejected\')">Reject</button>' +
+                  '</div>'
+                : '') +
+            '</div>';
           }).join('');
-          return '<div class="app-admin-item">' +
-            '<div class="app-admin-info">' +
-              '<div class="name">' + escapeHtml(s.title) + '</div>' +
-              '<div class="meta">' + s.id + ' &middot; by ' + escapeHtml(s.submittedBy) + ' &middot; ' + new Date(s.submittedAt).toLocaleString() + ' &middot; ' +
-                '<span class="' + statusObj.cls + '" style="padding: 2px 8px; border-radius: 99px; font-weight: 700; font-size: 0.75rem;">' + statusObj.label + '</span></div>' +
-              '<div class="details"><p>' + escapeHtml(s.description) + '</p></div>' +
-              '<div class="meta" style="margin-top: 8px;">Votes: ' + (s.votes || 0) + '</div>' +
-              '<div style="margin-top: 12px;">' +
-                '<label style="font-size: 0.8rem; color: var(--text-muted); margin-right: 8px;">Status:</label>' +
-                '<select onchange="updateSuggestionStatus(\'' + s.id + '\', this.value)" style="background: #111827; color: #fff; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 6px 12px; font-family: inherit; font-size: 0.85rem;">' +
-                  statusOpts +
-                '</select>' +
+        }
+
+        // Suggestions
+        var suggestionsContainer = document.getElementById('suggestionsList');
+        if (suggestions.length === 0) {
+          suggestionsContainer.innerHTML = '<p style="color: var(--text-muted);">No suggestions found.</p>';
+        } else {
+          suggestionsContainer.innerHTML = suggestions.map(function(s) {
+            var statusObj = suggestionStatuses[s.status] || suggestionStatuses.new;
+            var statusOpts = Object.keys(suggestionStatuses).map(function(key) {
+              var selected = key === s.status ? 'selected' : '';
+              return '<option value="' + key + '" ' + selected + '>' + suggestionStatuses[key].label + '</option>';
+            }).join('');
+            return '<div class="app-admin-item">' +
+              '<div class="app-admin-info">' +
+                '<div class="name">' + escapeHtml(s.title) + '</div>' +
+                '<div class="meta">' + s.id + ' &middot; by ' + escapeHtml(s.submittedBy) + ' &middot; ' + new Date(s.submittedAt).toLocaleString() + ' &middot; ' +
+                  '<span class="' + statusObj.cls + '" style="padding: 2px 8px; border-radius: 99px; font-weight: 700; font-size: 0.75rem;">' + statusObj.label + '</span></div>' +
+                '<div class="details"><p>' + escapeHtml(s.description) + '</p></div>' +
+                '<div class="meta" style="margin-top: 8px;">Votes: ' + (s.votes || 0) + '</div>' +
+                '<div style="margin-top: 12px;">' +
+                  '<label style="font-size: 0.8rem; color: var(--text-muted); margin-right: 8px;">Status:</label>' +
+                  '<select onchange="updateSuggestionStatus(\'' + s.id + '\', this.value)" style="background: #111827; color: #fff; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 6px 12px; font-family: inherit; font-size: 0.85rem;">' +
+                    statusOpts +
+                  '</select>' +
+                '</div>' +
               '</div>' +
-            '</div>' +
-          '</div>';
-        }).join('');
-      }
-      // Role apps
-      var rolesContainer = document.getElementById('rolesList');
-      if (roleApps.length === 0) {
-        rolesContainer.innerHTML = '<p style="color: var(--text-muted);">No applications found.</p>';
-      } else {
-        rolesContainer.innerHTML = roleApps.reverse().map(function(app) {
-          var statusClass = app.status === 'approved' ? 'status-approved' : app.status === 'rejected' ? 'status-rejected' : 'status-pending';
-          var statusLabel = app.status.charAt(0).toUpperCase() + app.status.slice(1);
-          return '<div class="app-admin-item">' +
-            '<div class="app-admin-info">' +
-              '<div class="name">' + escapeHtml(app.fullName) + '</div>' +
-              '<div class="meta">' + app.id + ' &middot; ' + new Date(app.submittedAt).toLocaleString() + ' &middot; ' +
-                '<span class="' + statusClass + '" style="padding: 2px 8px; border-radius: 99px; font-weight: 700; font-size: 0.75rem;">' + statusLabel + '</span></div>' +
-              '<div class="details">' +
-                '<p>Email: ' + escapeHtml(app.email) + '</p>' +
-                '<p>Position: <span class="position-tag">' + escapeHtml(positionLabels[app.position] || app.position) + '</span> &middot; Availability: ' + escapeHtml(app.availability) + '</p>' +
+            '</div>';
+          }).join('');
+        }
+        // Role apps
+        var rolesContainer = document.getElementById('rolesList');
+        if (roleApps.length === 0) {
+          rolesContainer.innerHTML = '<p style="color: var(--text-muted);">No applications found.</p>';
+        } else {
+          rolesContainer.innerHTML = roleApps.map(function(app) {
+            var statusClass = app.status === 'approved' ? 'status-approved' : app.status === 'rejected' ? 'status-rejected' : 'status-pending';
+            var statusLabel = app.status.charAt(0).toUpperCase() + app.status.slice(1);
+            return '<div class="app-admin-item">' +
+              '<div class="app-admin-info">' +
+                '<div class="name">' + escapeHtml(app.fullName) + '</div>' +
+                '<div class="meta">' + app.id + ' &middot; ' + new Date(app.submittedAt).toLocaleString() + ' &middot; ' +
+                  '<span class="' + statusClass + '" style="padding: 2px 8px; border-radius: 99px; font-weight: 700; font-size: 0.75rem;">' + statusLabel + '</span></div>' +
+                '<div class="details">' +
+                  '<p>Email: ' + escapeHtml(app.email) + '</p>' +
+                  '<p>Position: <span class="position-tag">' + escapeHtml(positionLabels[app.position] || app.position) + '</span> &middot; Availability: ' + escapeHtml(app.availability) + '</p>' +
+                '</div>' +
+                '<div class="why-join">' + escapeHtml(app.experience) + '</div>' +
               '</div>' +
-              '<div class="why-join">' + escapeHtml(app.experience) + '</div>' +
-            '</div>' +
-            (app.status === 'pending'
-              ? '<div class="app-admin-actions">' +
-                  '<button class="btn-approve" onclick="updateApplicationStatus(\'eliteArrowsRoleApplications\', \'' + app.id + '\', \'approved\')">Approve</button>' +
-                  '<button class="btn-reject" onclick="updateApplicationStatus(\'eliteArrowsRoleApplications\', \'' + app.id + '\', \'rejected\')">Reject</button>' +
-                '</div>'
-              : '') +
-          '</div>';
-        }).join('');
+              (app.status === 'pending'
+                ? '<div class="app-admin-actions">' +
+                    '<button class="btn-approve" onclick="updateApplicationStatus(\'merchRoleApplications\', \'' + app.id + '\', \'approved\')">Approve</button>' +
+                    '<button class="btn-reject" onclick="updateApplicationStatus(\'merchRoleApplications\', \'' + app.id + '\', \'rejected\')">Reject</button>' +
+                  '</div>'
+                : '') +
+            '</div>';
+          }).join('');
+        }
+      } catch (error) {
+        console.error("Error loading admin data:", error);
       }
     }
 
-    function verifyAdmin() {
+    window.verifyAdmin = function() {
       var email = document.getElementById('adminEmailInput').value.trim().toLowerCase();
       if (email === 'rhyshowe2023@outlook.com') {
         if (document.getElementById('adminRemember').checked) {
@@ -318,7 +330,7 @@
         }
         document.getElementById('adminAuthGate').style.display = 'none';
         document.getElementById('adminPanel').style.display = 'flex';
-        loadAdmin();
+        window.loadAdmin();
       } else {
         document.getElementById('adminAuthError').textContent = 'Unauthorised email. Access denied.';
       }
@@ -328,13 +340,13 @@
       if (localStorage.getItem('eliteArrowsAdminAuth') === 'true') {
         document.getElementById('adminAuthGate').style.display = 'none';
         document.getElementById('adminPanel').style.display = 'flex';
-        loadAdmin();
+        window.loadAdmin();
       }
     }
 
     document.addEventListener('DOMContentLoaded', function() {
       document.getElementById('adminEmailInput').addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') verifyAdmin();
+        if (e.key === 'Enter') window.verifyAdmin();
       });
       checkPersistedAuth();
     });
